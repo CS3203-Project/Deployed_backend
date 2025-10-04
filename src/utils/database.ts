@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 // Singleton Prisma client to prevent multiple instances
 class DatabaseManager {
+  private static instance: PrismaClient;
+
   static getInstance() {
     if (!DatabaseManager.instance) {
       DatabaseManager.instance = new PrismaClient({
