@@ -9,7 +9,7 @@ try {
   process.exit(1);
 }
 
-import { prisma } from './src/utils/database';
+import { prisma } from './src/utils/database.js';
 import { queueService } from './src/services/queue.service.js';
 import express, { type Application } from 'express';
 import cors, { type CorsOptions } from 'cors';
