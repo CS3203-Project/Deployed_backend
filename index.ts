@@ -25,7 +25,6 @@ import reviewRoutes from './src/routes/review.route.js';
 import serviceReviewRoutes from './src/routes/serviceReview.route.js';
 import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.js';
 
-// Simple database test function
 async function testDatabaseConnection() {
   try {
     await prisma.$queryRaw`SELECT 1 as test`;
