@@ -2,9 +2,7 @@ import { PrismaClient } from '@prisma/client';
 
 // Singleton Prisma client to prevent multiple instances
 class DatabaseManager {
-  private static instance: PrismaClient;
-
-  public static getInstance(): PrismaClient {
+  static getInstance() {
     if (!DatabaseManager.instance) {
       DatabaseManager.instance = new PrismaClient({
         log: ['warn', 'error'],
@@ -34,7 +32,7 @@ class DatabaseManager {
     return DatabaseManager.instance;
   }
 
-  public static async disconnect(): Promise<void> {
+  static async disconnect() {
     if (DatabaseManager.instance) {
       await DatabaseManager.instance.$disconnect();
     }
