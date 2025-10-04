@@ -7,7 +7,12 @@
     "build": "tsc",
     "start": "ts-node index.ts",
     "dev": "npm run build && node dist/index.js",
-    "seed": "npm run build && node dist/prisma/seed.js"
+    "seed": "npm run build && node dist/prisma/seed.js",
+    "pm2:start": "npm run build && pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:logs": "pm2 logs backend",
+    "pm2:monit": "pm2 monit"
   },
   "repository": {
     "type": "git",
