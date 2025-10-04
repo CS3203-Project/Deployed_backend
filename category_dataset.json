@@ -1,0 +1,294 @@
+{
+  "categories": [
+    {
+      "name": "Home Services",
+      "slug": "home-services",
+      "description": "Professional services for your home maintenance, repairs, and improvements",
+      "parentId": null,
+      "subcategories": [
+        {
+          "name": "Cleaning Services",
+          "slug": "cleaning-services",
+          "description": "Professional cleaning for homes and offices"
+        },
+        {
+          "name": "Plumbing",
+          "slug": "plumbing",
+          "description": "Plumbing repairs, installations, and maintenance"
+        },
+        {
+          "name": "Electrical Work",
+          "slug": "electrical-work",
+          "description": "Electrical installations, repairs, and maintenance"
+        },
+        {
+          "name": "Gardening & Landscaping",
+          "slug": "gardening-landscaping",
+          "description": "Garden maintenance, landscaping, and outdoor services"
+        },
+        {
+          "name": "Home Renovation",
+          "slug": "home-renovation",
+          "description": "Home improvement and renovation services"
+        },
+        {
+          "name": "Painting & Decorating",
+          "slug": "painting-decorating",
+          "description": "Interior and exterior painting services"
+        },
+        {
+          "name": "Carpentry",
+          "slug": "carpentry",
+          "description": "Custom woodwork and carpentry services"
+        },
+        {
+          "name": "Pest Control",
+          "slug": "pest-control",
+          "description": "Professional pest management and control services"
+        },
+        {
+          "name": "HVAC Services",
+          "slug": "hvac-services",
+          "description": "Heating, ventilation, and air conditioning services"
+        },
+        {
+          "name": "Security Systems",
+          "slug": "security-systems",
+          "description": "Home security installation and monitoring"
+        }
+      ]
+    },
+    {
+      "name": "Creative Services",
+      "slug": "creative-services",
+      "description": "Professional creative and design services for businesses and individuals",
+      "parentId": null,
+      "subcategories": [
+        {
+          "name": "Graphic Design",
+          "slug": "graphic-design",
+          "description": "Logo design, branding, and visual identity services"
+        },
+        {
+          "name": "Web Design",
+          "slug": "web-design",
+          "description": "Website design and user interface development"
+        },
+        {
+          "name": "Photography",
+          "slug": "photography",
+          "description": "Professional photography for events, portraits, and commercial use"
+        },
+        {
+          "name": "Video Production",
+          "slug": "video-production",
+          "description": "Video editing, production, and cinematography services"
+        },
+        {
+          "name": "Content Writing",
+          "slug": "content-writing",
+          "description": "Professional writing services for web, marketing, and publications"
+        },
+        {
+          "name": "Digital Marketing",
+          "slug": "digital-marketing",
+          "description": "Social media management, SEO, and online marketing"
+        },
+        {
+          "name": "Animation",
+          "slug": "animation",
+          "description": "2D and 3D animation services"
+        },
+        {
+          "name": "Voice Over",
+          "slug": "voice-over",
+          "description": "Professional voice recording and narration services"
+        },
+        {
+          "name": "Music Production",
+          "slug": "music-production",
+          "description": "Audio recording, mixing, and music production"
+        },
+        {
+          "name": "Illustration",
+          "slug": "illustration",
+          "description": "Custom illustrations and artwork"
+        }
+      ]
+    },
+    {
+      "name": "Personal Care",
+      "slug": "personal-care",
+      "description": "Health, wellness, and personal grooming services",
+      "parentId": null,
+      "subcategories": [
+        {
+          "name": "Hair Styling",
+          "slug": "hair-styling",
+          "description": "Professional hair cutting, styling, and treatments"
+        },
+        {
+          "name": "Beauty & Makeup",
+          "slug": "beauty-makeup",
+          "description": "Makeup services for events and special occasions"
+        },
+        {
+          "name": "Spa Services",
+          "slug": "spa-services",
+          "description": "Relaxation and wellness spa treatments"
+        },
+        {
+          "name": "Massage Therapy",
+          "slug": "massage-therapy",
+          "description": "Therapeutic and relaxation massage services"
+        },
+        {
+          "name": "Nail Care",
+          "slug": "nail-care",
+          "description": "Manicure, pedicure, and nail art services"
+        },
+        {
+          "name": "Personal Training",
+          "slug": "personal-training",
+          "description": "Fitness coaching and personal training sessions"
+        },
+        {
+          "name": "Nutrition Counseling",
+          "slug": "nutrition-counseling",
+          "description": "Dietary advice and nutrition planning"
+        },
+        {
+          "name": "Mental Health Counseling",
+          "slug": "mental-health-counseling",
+          "description": "Professional counseling and therapy services"
+        },
+        {
+          "name": "Yoga & Meditation",
+          "slug": "yoga-meditation",
+          "description": "Yoga classes and meditation guidance"
+        },
+        {
+          "name": "Skincare",
+          "slug": "skincare",
+          "description": "Professional skincare treatments and consultations"
+        }
+      ]
+    },
+    {
+      "name": "Professional Services",
+      "slug": "professional-services",
+      "description": "Expert professional and consulting services",
+      "parentId": null,
+      "subcategories": [
+        {
+          "name": "Legal Services",
+          "slug": "legal-services",
+          "description": "Legal consultation and representation"
+        },
+        {
+          "name": "Accounting & Bookkeeping",
+          "slug": "accounting-bookkeeping",
+          "description": "Financial management and accounting services"
+        },
+        {
+          "name": "Tax Preparation",
+          "slug": "tax-preparation",
+          "description": "Tax filing and preparation services"
+        },
+        {
+          "name": "Real Estate",
+          "slug": "real-estate",
+          "description": "Property buying, selling, and rental services"
+        },
+        {
+          "name": "Insurance Services",
+          "slug": "insurance-services",
+          "description": "Insurance consultation and policy management"
+        },
+        {
+          "name": "Financial Planning",
+          "slug": "financial-planning",
+          "description": "Investment advice and financial planning"
+        },
+        {
+          "name": "Architecture",
+          "slug": "architecture",
+          "description": "Architectural design and planning services"
+        },
+        {
+          "name": "Engineering",
+          "slug": "engineering",
+          "description": "Professional engineering consultation"
+        },
+        {
+          "name": "Translation Services",
+          "slug": "translation-services",
+          "description": "Document translation and interpretation"
+        },
+        {
+          "name": "Notary Services",
+          "slug": "notary-services",
+          "description": "Document notarization and certification"
+        }
+      ]
+    },
+    {
+      "name": "Business Services",
+      "slug": "business-services",
+      "description": "Professional services to help businesses grow and operate efficiently",
+      "parentId": null,
+      "subcategories": [
+        {
+          "name": "Business Consulting",
+          "slug": "business-consulting",
+          "description": "Strategic business advice and consulting"
+        },
+        {
+          "name": "IT Support",
+          "slug": "it-support",
+          "description": "Computer and network technical support"
+        },
+        {
+          "name": "Software Development",
+          "slug": "software-development",
+          "description": "Custom software and application development"
+        },
+        {
+          "name": "Data Entry",
+          "slug": "data-entry",
+          "description": "Professional data entry and processing services"
+        },
+        {
+          "name": "Virtual Assistant",
+          "slug": "virtual-assistant",
+          "description": "Remote administrative and support services"
+        },
+        {
+          "name": "Customer Service",
+          "slug": "customer-service",
+          "description": "Outsourced customer support services"
+        },
+        {
+          "name": "HR Services",
+          "slug": "hr-services",
+          "description": "Human resources consulting and management"
+        },
+        {
+          "name": "Project Management",
+          "slug": "project-management",
+          "description": "Professional project planning and execution"
+        },
+        {
+          "name": "Market Research",
+          "slug": "market-research",
+          "description": "Market analysis and research services"
+        },
+        {
+          "name": "Business Writing",
+          "slug": "business-writing",
+          "description": "Professional business documents and proposals"
+        }
+      ]
+    }
+  ]
+}

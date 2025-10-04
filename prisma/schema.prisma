@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+model User {
+  id                    String           @id @default(cuid())
+  email                 String           @unique
+  password              String
+  role                  String           @default("USER")
+  isActive              Boolean          @default(true)
+  firstName             String?
+  lastName              String?
+  phone                 String?
+  imageUrl              String?
+  location              String?
+  address               String?
+  isEmailVerified       Boolean          @default(false)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  lastLoginAt           DateTime?
+  socialmedia           String[]
+  messagesSent          Message[]        @relation("MessagesSent")
+  messagesReceived      Message[]        @relation("MessagesReceived")
+  payments              Payment[]
+  schedules             Schedule[]
+  serviceProvider       ServiceProvider?
+  emailQueue            EmailQueue[]
+  customerReviewsWritten CustomerReview[] @relation("CustomerReviewReviewer")
+  customerReviewsReceived CustomerReview[] @relation("CustomerReviewReviewee")
+  writtenServiceReviews ServiceReview[] @relation("writtenServiceReviews")
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model ServiceProvider {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  bio            String?
+  skills         String[]
+  qualifications String[]
+  logoUrl        String?
+  averageRating  Float?
+  totalReviews   Int?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  IDCardUrl      String
+  isVerified     Boolean    @default(true)
+  companies      Company[]
+  payments       Payment[]
+  schedules      Schedule[]
+  services       Service[]
+  user           User       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isVerified])
+  @@index([averageRating])
+  @@index([createdAt])
+}
+
+model Company {
+  id          String          @id @default(cuid())
+  providerId  String
+  name        String?
+  description String?
+  logo        String?
+  address     String?
+  contact     String?
+  socialmedia String[]
+  provider    ServiceProvider @relation(fields: [providerId], references: [id])
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String?
+  slug        String     @unique
+  description String?
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  services    Service[]
+}
+
+model Service {
+  id          String          @id @default(cuid())
+  providerId  String
+  categoryId  String
+  title       String?
+  description String?
+  price       Decimal         @db.Decimal(10, 2)
+  currency    String          @default("RS")
+  tags        String[]
+  images      String[]
+  videoUrl    String?
+  isActive    Boolean         @default(true)
+  workingTime String[]
+
+  // Semantic search fields
+  titleEmbedding       Unsupported("vector(768)")?
+  descriptionEmbedding Unsupported("vector(768)")?
+  tagsEmbedding        Unsupported("vector(768)")?
+  combinedEmbedding    Unsupported("vector(768)")?
+  embeddingUpdatedAt   DateTime?
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  payments    Payment[]
+  schedules   Schedule[]
+  conversations Conversation[]
+  category    Category        @relation(fields: [categoryId], references: [id])
+  provider    ServiceProvider @relation(fields: [providerId], references: [id])
+  serviceReviews ServiceReview[]
+
+  @@index([isActive])
+  @@index([categoryId])
+  @@index([providerId])
+  @@index([createdAt])
+}
+
+model Schedule {
+  id                   String          @id @default(cuid())
+  serviceId            String
+  providerId           String
+  userId               String
+  startTime            String
+  endTime              String
+  customerConfirmation Boolean         @default(false)
+  providerConfirmation Boolean         @default(false)
+  serviceFee           Decimal?        @db.Decimal(10, 2)
+  currency             String          @default("RS")
+  queueValue           Int?
+  provider             ServiceProvider @relation(fields: [providerId], references: [id])
+  service              Service         @relation(fields: [serviceId], references: [id])
+  user                 User            @relation(fields: [userId], references: [id])
+}
+
+model Payment {
+  id            String          @id @default(cuid())
+  serviceId     String
+  providerId    String
+  userId        String
+  gateway       String?
+  chargeId      String          @unique
+  amount        Decimal         @db.Decimal(10, 2)
+  currency      String
+  status        String?
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  failureReason String?
+  createdAt     DateTime        @default(now())
+  provider      ServiceProvider @relation(fields: [providerId], references: [id])
+  service       Service         @relation(fields: [serviceId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
+}
+
+
+model ServiceReview {
+  id         String   @id @default(cuid())
+  reviewerId String
+  serviceId  String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  reviewer   User     @relation("writtenServiceReviews", fields: [reviewerId], references: [id])
+  service    Service  @relation(fields: [serviceId], references: [id])
+}
+
+model EmailQueue {
+  id        String    @id @default(cuid())
+  userId    String?
+  to        String
+  subject   String
+  html      String
+  emailType EmailType
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User?     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([emailType])
+  @@index([sentAt])
+  @@map("email_queue")
+}
+  model Admin {
+    id         Int    @id @default(autoincrement())
+    username   String @unique
+    password   String
+    firstName  String
+    lastName   String
+  }
+
+model Conversation {
+  id         String    @id @default(uuid())
+  userIds    String[]
+  title      String?
+  serviceId  String?
+  service    Service?   @relation(fields: [serviceId], references: [id])
+  messages   Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  content        String
+  fromId         String
+  toId           String
+  conversationId String
+  createdAt      DateTime     @default(now())
+  receivedAt     DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  from           User         @relation("MessagesSent", fields: [fromId], references: [id])
+  to             User         @relation("MessagesReceived", fields: [toId], references: [id])
+}
+
+model CustomerReview {
+  id         String   @id @default(cuid())
+  reviewerId String
+  revieweeId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  reviewer   User     @relation("CustomerReviewReviewer", fields: [reviewerId], references: [id])
+  reviewee   User     @relation("CustomerReviewReviewee", fields: [revieweeId], references: [id])
+}
+
+enum EmailType {
+  BOOKING_CONFIRMATION              @map("BOOKING_CONFIRMATION")
+  BOOKING_REMINDER                  @map("BOOKING_REMINDER")
+  BOOKING_CANCELLATION_MODIFICATION @map("BOOKING_CANCELLATION_MODIFICATION")
+  NEW_MESSAGE_OR_REVIEW             @map("NEW_MESSAGE_OR_REVIEW")
+  OTHER                             @map("OTHER")
+
+  @@map("EmailType")
+}
