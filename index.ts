@@ -28,7 +28,7 @@ import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.
 async function testDatabaseConnection() {
   try {
     await prisma.$queryRaw`SELECT 1 as test`;
-    console.log('✅ Database connection successful');
+    console.log('Database connection successful');
     return true;
   } catch (error: any) {
     console.error('❌ Database connection failed:', error.message);
