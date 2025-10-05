@@ -23,6 +23,7 @@ import adminRoutes from './src/routes/admin.route.js';
 import confirmationRoutes from './src/routes/confirmation.route.js'; 
 import reviewRoutes from './src/routes/review.route.js';
 import serviceReviewRoutes from './src/routes/serviceReview.route.js';
+import healthRoutes from './src/routes/health.route.js';
 import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.js';
 
 async function testDatabaseConnection() {
@@ -64,6 +65,30 @@ app.use(limiter);
 // Increase JSON payload limit for file uploads
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Base API endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'API is running',
+    version: '1.0.0',
+    endpoints: [
+      '/api/health',
+      '/api/users',
+      '/api/providers',
+      '/api/companies',
+      '/api/services',
+      '/api/categories',
+      '/api/admin',
+      '/api/confirmations',
+      '/api/reviews',
+      '/api/service-reviews',
+      '/api/chatbot'
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.use('/api', healthRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/companies', companyRoutes);
