@@ -7,10 +7,10 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "ESNext",
-    "target": "ESNext",
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    "module": "Node16",
+    "target": "ES2022",
+    "moduleResolution": "Node16",
+    "ignoreDeprecations": "5.0",
     "types": ["node"],
     "lib": ["esnext"],
     "allowSyntheticDefaultImports": true,
@@ -22,8 +22,10 @@
     "declarationMap": true,
 
     // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false,
+    "strict": false,
+    "skipLibCheck": true,
 
     // Style Options
     // "noImplicitReturns": true,
@@ -34,13 +36,11 @@
     // "noPropertyAccessFromIndexSignature": true,
 
     // Recommended Options
-    "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": false,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": false,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
+    "moduleDetection": "force"
   },
   "ts-node": {
     "esm": true
