@@ -19,7 +19,7 @@ import providerRoutes from './src/routes/provider.route.js';
 import companyRoutes from './src/routes/company.route.js';
 import servicesRoutes from './src/routes/services.route.js';
 import categoryRoutes from './src/routes/category.route.js';
-import adminRoutes from './src/routes/admin.route.js'; 
+import adminRoutes from './src/Admin/routes/admin.route.js'; 
 import confirmationRoutes from './src/routes/confirmation.route.js'; 
 import reviewRoutes from './src/routes/review.route.js';
 import serviceReviewRoutes from './src/routes/serviceReview.route.js';
