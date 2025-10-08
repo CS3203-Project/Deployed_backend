@@ -12,6 +12,8 @@ try {
 import { prisma } from './src/utils/database.js';
 import { queueService } from './src/services/queue.service.js';
 import express, { type Application } from 'express';
+import https from 'https';
+import fs from 'fs';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
 import userRoutes from './src/routes/user.route.js';
@@ -41,7 +43,12 @@ const app: Application = express();
 
 // CORS configuration (must run before any rate limiting or routes)
 const corsOptions: CorsOptions = {
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:3000',
+    'https://zia-tgsix.ondigitalocean.app',
+    process.env.FRONTEND_URL || 'http://localhost:5173'
+  ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -103,6 +110,7 @@ app.use('/api/chatbot', chatbotRoutes);
 console.log(`🤖 ${CHATBOT_MODULE_INFO.name} loaded with endpoints:`, CHATBOT_MODULE_INFO.endpoints);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
+const HTTPS_PORT: number = parseInt(process.env.HTTPS_PORT || '3443', 10);
 
 // Start server with basic database test
 async function startServer() {
@@ -125,9 +133,32 @@ async function startServer() {
     // Don't exit - continue without email functionality
   }
   
+  // Start HTTP server
   app.listen(PORT, () => {
-    console.log(`🎯 Server running on port ${PORT}`);
+    console.log(`🎯 HTTP Server running on port ${PORT}`);
   });
+
+  // Start HTTPS server if SSL certificates are available
+  const sslKeyPath = process.env.SSL_KEY_PATH;
+  const sslCertPath = process.env.SSL_CERT_PATH;
+  
+  if (sslKeyPath && sslCertPath) {
+    try {
+      const httpsOptions = {
+        key: fs.readFileSync(sslKeyPath),
+        cert: fs.readFileSync(sslCertPath)
+      };
+      
+      https.createServer(httpsOptions, app).listen(HTTPS_PORT, () => {
+        console.log(`🔒 HTTPS Server running on port ${HTTPS_PORT}`);
+      });
+    } catch (error) {
+      console.error('⚠️ Could not start HTTPS server:', error);
+      console.log('💡 Continuing with HTTP only. Configure SSL_KEY_PATH and SSL_CERT_PATH for HTTPS.');
+    }
+  } else {
+    console.log('💡 No SSL certificates configured. Set SSL_KEY_PATH and SSL_CERT_PATH for HTTPS support.');
+  }
 }
 
 // Start the server
