@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  extensions = [pgvector(map: "vector")]
+  extensions = [pgvector(map: "vector"), postgis(map: "postgis")]
 }
 
 model User {
@@ -14,7 +14,7 @@ model User {
   email                 String           @unique
   password              String
   role                  String           @default("USER")
-  isActive              Boolean          @default(true)
+  isActive              Boolean          @default(false)
   firstName             String?
   lastName              String?
   phone                 String?
@@ -31,7 +31,7 @@ model User {
   payments              Payment[]
   schedules             Schedule[]
   serviceProvider       ServiceProvider?
-  emailQueue            EmailQueue[]
+  notification          Notification[]
   customerReviewsWritten CustomerReview[] @relation("CustomerReviewReviewer")
   customerReviewsReceived CustomerReview[] @relation("CustomerReviewReviewee")
   writtenServiceReviews ServiceReview[] @relation("writtenServiceReviews")
@@ -104,6 +104,17 @@ model Service {
   isActive    Boolean         @default(true)
   workingTime String[]
 
+  // Location fields
+  latitude            Float?
+  longitude           Float?
+  address             String?
+  city                String?
+  state               String?
+  country             String?
+  postalCode          String?
+  serviceRadiusKm     Float?              @default(10)
+  locationLastUpdated DateTime?
+
   // Semantic search fields
   titleEmbedding       Unsupported("vector(768)")?
   descriptionEmbedding Unsupported("vector(768)")?
@@ -124,6 +135,9 @@ model Service {
   @@index([categoryId])
   @@index([providerId])
   @@index([createdAt])
+  @@index([latitude, longitude])
+  @@index([city])
+  @@index([state])
 }
 
 model Schedule {
@@ -175,7 +189,7 @@ model ServiceReview {
   service    Service  @relation(fields: [serviceId], references: [id])
 }
 
-model EmailQueue {
+model Notification {
   id        String    @id @default(cuid())
   userId    String?
   to        String
@@ -184,12 +198,13 @@ model EmailQueue {
   emailType EmailType
   sentAt    DateTime?
   createdAt DateTime  @default(now())
+  isRead    Boolean   @default(false)
   user      User?     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([emailType])
   @@index([sentAt])
-  @@map("email_queue")
+  @@map("notification")
 }
   model Admin {
     id         Int    @id @default(autoincrement())

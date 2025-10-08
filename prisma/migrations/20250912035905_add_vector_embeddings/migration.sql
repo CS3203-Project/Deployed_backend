@@ -21,4 +21,6 @@ CREATE INDEX "Service_providerId_idx" ON "public"."Service"("providerId");
 CREATE INDEX "Service_createdAt_idx" ON "public"."Service"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "Service_combinedEmbedding_idx" ON "public"."Service" USING GIN ("combinedEmbedding");
+-- For pgvector we must specify an operator class for the index. Use ivfflat with vector_l2_ops
+-- Adjust the index definition to include the operator class and an appropriate number of lists.
+CREATE INDEX "Service_combinedEmbedding_idx" ON "public"."Service" USING ivfflat ("combinedEmbedding" vector_l2_ops) WITH (lists = 100);
