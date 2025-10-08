@@ -41,6 +41,9 @@ async function testDatabaseConnection() {
 
 const app: Application = express();
 
+// Trust proxy - MUST be set before rate limiting when behind reverse proxy/load balancer
+app.set('trust proxy', true);
+
 // CORS configuration (must run before any rate limiting or routes)
 const corsOptions: CorsOptions = {
   origin: [
