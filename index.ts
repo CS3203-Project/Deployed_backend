@@ -56,6 +56,7 @@ import serviceReviewRoutes from './src/routes/serviceReview.route.js';
 import serviceRequestRoutes from './src/routes/serviceRequest.route.js';
 import paymentRoutes from './src/routes/payment.route.js';
 import notificationRoutes from './src/routes/notification.route.js';
+import healthRoutes from './src/routes/health.route.js';
 import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.js';
 
 // Simple database test function
@@ -102,6 +103,12 @@ app.use(limiter);
 // Increase JSON payload limit for file uploads
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Health check routes (no auth required)
+app.use('/', healthRoutes);
+app.use('/api', healthRoutes);
+
+// API routes
 app.use('/api/users', userRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/companies', companyRoutes);
