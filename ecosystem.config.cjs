@@ -14,7 +14,18 @@ module.exports = {
       NODE_ENV: 'production',
       PORT: 3000
     }
-    // Removed log file paths to prevent ENOENT errors
-    // PM2 will handle logging automatically
+  }, {
+    name: 'backend-dev',
+    script: 'node_modules/.bin/nodemon',
+    args: '--exec tsx index.ts',
+    instances: 1,
+    autorestart: true,
+    watch: ['src', 'index.ts'],
+    ignore_watch: ['node_modules', 'dist', 'logs'],
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: 'development',
+      PORT: 3000
+    }
   }]
 };
