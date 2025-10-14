@@ -3,6 +3,10 @@ import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/utils/hash.js";
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const prisma = new PrismaClient();
 
@@ -24,7 +28,7 @@ async function seed() {
   console.log(`Created default category: ${defaultCategory.name}`);
 
   // Read category data from JSON file
-  const categoryDataPath = path.join(process.cwd(), "category_dataset.json");
+  const categoryDataPath = path.join(__dirname, "category_dataset.json");
   const categoryData = JSON.parse(fs.readFileSync(categoryDataPath, "utf8"));
 
   console.log("Seeding categories...");

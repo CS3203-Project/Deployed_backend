@@ -36,7 +36,7 @@ class QueueService {
 
   async connect(): Promise<void> {
     if (this.isConnecting) {
-      console.log('🔄 Connection already in progress, waiting...');
+      console.log('=====> Connection already in progress, waiting...');
       return;
     }
 
@@ -54,25 +54,25 @@ class QueueService {
 
       // Handle connection errors
       this.connection.on('error', (err: any) => {
-        console.error('❌ RabbitMQ connection error:', err);
+        console.error('error==> RabbitMQ connection error:', err);
         this.connection = null;
         this.channel = null;
       });
 
       this.connection.on('close', () => {
-        console.log('📤 RabbitMQ connection closed');
+        console.log('=====> RabbitMQ connection closed');
         this.connection = null;
         this.channel = null;
       });
 
       // Handle channel errors
       this.channel.on('error', (err: any) => {
-        console.error('❌ RabbitMQ channel error:', err);
+        console.error('error==> RabbitMQ channel error:', err);
         this.channel = null;
       });
 
       this.channel.on('close', () => {
-        console.log('📤 RabbitMQ channel closed');
+        console.log('=====> RabbitMQ channel closed');
         this.channel = null;
       });
 
@@ -81,13 +81,13 @@ class QueueService {
         durable: true
       });
 
-      console.log('✅ Connected to RabbitMQ and exchange created');
+      console.log('=====> Connected to RabbitMQ and exchange created');
     } catch (error) {
-      console.error('❌ Failed to connect to RabbitMQ:', error);
+      console.error('error==> Failed to connect to RabbitMQ:', error);
       this.connection = null;
       this.channel = null;
       // Don't throw error to prevent server crash
-      console.error('📧 Email notifications will be disabled until connection is restored');
+      console.error('error==> Email notifications will be disabled until connection is restored');
     } finally {
       this.isConnecting = false;
     }
@@ -96,13 +96,13 @@ class QueueService {
   async publishEmailEvent(event: EmailEvent): Promise<void> {
     // Check if connection is available, if not, try to reconnect
     if (!this.channel || !this.connection) {
-      console.log('🔄 RabbitMQ connection not available, attempting to reconnect...');
+      console.log('=====> RabbitMQ connection not available, attempting to reconnect...');
       await this.connect();
     }
 
     // If still no connection after reconnect attempt, skip email
     if (!this.channel) {
-      console.error('📧 Email notification skipped - RabbitMQ connection unavailable');
+      console.error('error==> Email notification skipped - RabbitMQ connection unavailable');
       return;
     }
 
@@ -122,19 +122,19 @@ class QueueService {
       );
 
       if (published) {
-        console.log(`📧 Email event published: ${event.type} for conversation ${event.data.conversationId}`);
+        console.log(`=====> Email event published: ${event.type} for conversation ${event.data.conversationId}`);
       } else {
         throw new Error('Failed to publish message to queue');
       }
     } catch (error) {
-      console.error('❌ Error publishing email event:', error);
+      console.error('error==> Error publishing email event:', error);
       
       // Reset connection on error
       this.connection = null;
       this.channel = null;
       
       // Don't throw error to prevent breaking the main confirmation flow
-      console.error('📧 Email notification failed but continuing with main operation');
+      console.error('error==> Email notification failed but continuing with main operation');
     }
   }
 
@@ -222,13 +222,13 @@ class QueueService {
   // Graceful shutdown
   setupGracefulShutdown(): void {
     process.on('SIGINT', async () => {
-      console.log('🔄 Gracefully shutting down RabbitMQ connection...');
+      console.log('==xx== Gracefully shutting down RabbitMQ connection...');
       await this.close();
       process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
-      console.log('🔄 Gracefully shutting down RabbitMQ connection...');
+      console.log('==xx== Gracefully shutting down RabbitMQ connection...');
       await this.close();
       process.exit(0);
     });

@@ -9,7 +9,7 @@ interface KnowledgeBase {
 }
 
 class ChatbotService {
-  private knowledgeBase: KnowledgeBase;
+  private knowledgeBase!: KnowledgeBase;
 
   constructor() {
     this.loadKnowledgeBase();
@@ -19,9 +19,9 @@ class ChatbotService {
     try {
       // Use embedded knowledge base instead of file system
       this.knowledgeBase = KNOWLEDGE_BASE;
-      console.log('✅ Chatbot knowledge base loaded successfully (embedded)');
+      console.log('=====> Chatbot knowledge base loaded successfully (embedded)');
     } catch (error) {
-      console.error('❌ Failed to load knowledge base:', error);
+      console.error('error==> Failed to load knowledge base:', error);
       // Fallback knowledge base
       this.knowledgeBase = {
         platform_guide: {},
@@ -34,7 +34,7 @@ class ChatbotService {
 
   async processQuestion(question: string): Promise<string> {
     const lowerQuestion = question.toLowerCase();
-    console.log('🤖 Processing question:', lowerQuestion);
+    console.log('=====> Processing question:', lowerQuestion);
     
     // First check quick answers for exact matches
     for (const [key, answer] of Object.entries(this.knowledgeBase.quick_answers)) {
@@ -111,7 +111,7 @@ class ChatbotService {
       }
     }
 
-    console.log('🔄 No specific match found, using default response');
+    console.log('=====> No specific match found, using default response');
     return this.getDefaultResponse(lowerQuestion);
   }
 

@@ -45,7 +45,7 @@ export const createProvider = async (userId: string, providerData: ProviderCreat
         skills: providerData.skills || [],
         qualifications: providerData.qualifications || [],
         logoUrl: providerData.logoUrl,
-        IDCardUrl: providerData.IDCardUrl,
+        IDCardUrl: providerData.IDCardUrl || '',
       },
       include: {
         user: {
@@ -190,7 +190,12 @@ export const getProviderProfile = async (userId: string) => {
           images: true,
           isActive: true,
           tags: true,
-          createdAt: true
+          createdAt: true,
+          serviceReviews: {
+            select: {
+              rating: true
+            }
+          }
         },
         orderBy: {
           createdAt: 'desc'
@@ -203,7 +208,40 @@ export const getProviderProfile = async (userId: string) => {
     throw new Error('Service provider profile not found');
   }
 
-  return provider;
+  // Calculate review statistics for each service and overall provider stats
+  let totalRating = 0;
+  let totalReviewCount = 0;
+
+  const servicesWithStats = provider.services.map(service => {
+    const reviewCount = service.serviceReviews.length;
+    let averageRating = 0;
+
+    if (reviewCount > 0) {
+      const serviceTotal = service.serviceReviews.reduce((sum, review) => sum + review.rating, 0);
+      averageRating = serviceTotal / reviewCount;
+      totalRating += serviceTotal;
+      totalReviewCount += reviewCount;
+    }
+
+    const { serviceReviews, ...serviceData } = service;
+    return {
+      ...serviceData,
+      averageRating: averageRating > 0 ? parseFloat(averageRating.toFixed(1)) : 0,
+      reviewCount
+    };
+  });
+
+  // Calculate overall provider statistics
+  const overallAverageRating = totalReviewCount > 0 
+    ? parseFloat((totalRating / totalReviewCount).toFixed(1)) 
+    : 0;
+
+  return {
+    ...provider,
+    services: servicesWithStats,
+    averageRating: overallAverageRating,
+    totalReviews: totalReviewCount
+  };
 };
 
 export const getProviderById = async (id: string) => {

@@ -14,18 +14,50 @@ export interface UpdateServiceReviewData {
 }
 
 export const createServiceReview = async (data: CreateServiceReviewData) => {
-  // Prevent duplicate reviews by same user for same service
+  // Check if review already exists
   const existing = await prisma.serviceReview.findFirst({
     where: { reviewerId: data.reviewerId, serviceId: data.serviceId }
   });
-  if (existing) throw new Error('You have already reviewed this service.');
-  return prisma.serviceReview.create({
-    data,
-    include: {
-      reviewer: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
-      service: { select: { id: true, title: true } }
+
+  if (existing) {
+    // Update existing review (upsert behavior)
+    const updateData: any = {
+      rating: data.rating,
+      updatedAt: new Date(),
+    };
+
+    if (data.comment !== undefined) {
+      updateData.comment = data.comment;
     }
-  });
+
+    return prisma.serviceReview.update({
+      where: { id: existing.id },
+      data: updateData,
+      include: {
+        reviewer: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
+        service: { select: { id: true, title: true } }
+      }
+    });
+  } else {
+    // Create new review
+    const createData: any = {
+      reviewerId: data.reviewerId,
+      serviceId: data.serviceId,
+      rating: data.rating,
+    };
+
+    if (data.comment !== undefined) {
+      createData.comment = data.comment;
+    }
+
+    return prisma.serviceReview.create({
+      data: createData,
+      include: {
+        reviewer: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
+        service: { select: { id: true, title: true } }
+      }
+    });
+  }
 };
 
 export const getServiceReviews = async (serviceId: string, page = 1, limit = 10) => {
@@ -94,10 +126,10 @@ export const getServiceReviewStats = async (serviceId: string) => {
   }
 
   const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
+  const averageRating = reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / totalReviews;
   
   const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  reviews.forEach(review => {
+  reviews.forEach((review: { rating: number }) => {
     ratingDistribution[review.rating as keyof typeof ratingDistribution]++;
   });
 
@@ -144,7 +176,7 @@ export const getServiceReviewsDetailed = async (serviceId: string, page = 1, lim
   ]);
 
   // Transform reviews to match frontend format
-  const transformedReviews = reviews.map(review => ({
+  const transformedReviews = reviews.map((review: any) => ({
     id: review.id,
     rating: review.rating,
     comment: review.comment || '',
@@ -217,7 +249,7 @@ export const getProviderServiceReviews = async (providerId: string, page = 1, li
   ]);
 
   // Transform reviews to match frontend format
-  const transformedReviews = reviews.map(review => ({
+  const transformedReviews = reviews.map((review: any) => ({
     id: review.id,
     rating: review.rating,
     comment: review.comment || '',
@@ -267,10 +299,10 @@ export const getProviderReviewStats = async (providerId: string) => {
   }
 
   const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
+  const averageRating = reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / totalReviews;
   
   const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  reviews.forEach(review => {
+  reviews.forEach((review: { rating: number }) => {
     ratingDistribution[review.rating as keyof typeof ratingDistribution]++;
   });
 

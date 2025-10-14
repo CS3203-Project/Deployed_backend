@@ -174,8 +174,8 @@ export class SemanticSearchService {
 
       // Generate embeddings
       const embeddings = await embeddingService.generateServiceEmbeddings({
-        title: service.title,
-        description: service.description,
+        title: service.title ?? '',
+        description: service.description ?? '',
         tags: service.tags
       });
 
@@ -183,10 +183,10 @@ export class SemanticSearchService {
       await prisma.$executeRaw`
         UPDATE "Service" 
         SET 
-          "titleEmbedding" = ${embeddings.titleEmbedding}::vector,
-          "descriptionEmbedding" = ${embeddings.descriptionEmbedding}::vector,
-          "tagsEmbedding" = ${embeddings.tagsEmbedding}::vector,
-          "combinedEmbedding" = ${embeddings.combinedEmbedding}::vector,
+          "titleEmbedding" = ${`[${embeddings.titleEmbedding.join(',')}]`}::vector,
+          "descriptionEmbedding" = ${`[${embeddings.descriptionEmbedding.join(',')}]`}::vector,
+          "tagsEmbedding" = ${`[${embeddings.tagsEmbedding.join(',')}]`}::vector,
+          "combinedEmbedding" = ${`[${embeddings.combinedEmbedding.join(',')}]`}::vector,
           "embeddingUpdatedAt" = NOW()
         WHERE id = ${serviceId}
       `;
@@ -320,7 +320,11 @@ export class SemanticSearchService {
 
     } catch (error) {
       console.error('❌ Error finding similar services:', error);
-      console.error('Error details:', error.message, error.stack);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message, error.stack);
+      } else {
+        console.error('Error details:', error);
+      }
       throw new Error('Failed to find similar services');
     }
   }

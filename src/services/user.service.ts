@@ -92,7 +92,13 @@ export const login = async ({ email, password }: { email: string; password: stri
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) throw new Error('Invalid credentials');
 
-  const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  // Make sure JWT_SECRET exists and is a string
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  
+  const token = jwt.sign({ id: user.id, email: user.email }, jwtSecret, { expiresIn: '1h' });
   return { token, user };
 };
 

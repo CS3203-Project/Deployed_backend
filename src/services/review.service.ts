@@ -35,17 +35,23 @@ export const createReview = async (data: CreateReviewData) => {
     });
 
     if (existingReview) {
-      throw new Error('Review already exists for this provider');
+      // Return existing review instead of throwing error
+      return existingReview;
     }
 
     // Create the review
+    const reviewData: any = {
+      reviewerId: data.reviewerId,
+      revieweeId: data.revieweeId,
+      rating: data.rating,
+    };
+
+    if (data.comment !== undefined) {
+      reviewData.comment = data.comment;
+    }
+
     const review = await prisma.customerReview.create({
-      data: {
-        reviewerId: data.reviewerId,
-        revieweeId: data.revieweeId,
-        rating: data.rating,
-        comment: data.comment,
-      },
+      data: reviewData,
       include: {
         reviewer: {
           select: {
@@ -76,14 +82,51 @@ export const createReview = async (data: CreateReviewData) => {
   }
 };
 
-export const getCustomerReviews = async (customerId: string, page: number = 1, limit: number = 10) => {
+export const getUserReviewStatus = async (userId: string, revieweeId: string) => {
+  try {
+    const existingReview = await prisma.customerReview.findFirst({
+      where: {
+        reviewerId: userId,
+        revieweeId: revieweeId,
+      },
+      include: {
+        reviewer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            imageUrl: true,
+          },
+        },
+        reviewee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            imageUrl: true,
+          },
+        },
+      },
+    });
+
+    return {
+      hasReviewed: !!existingReview,
+      review: existingReview,
+    };
+  } catch (error) {
+    console.error('Error checking user review status:', error);
+    throw error;
+  }
+};
+
+export const getUserGivenReviews = async (userId: string, page: number = 1, limit: number = 10) => {
   try {
     const skip = (page - 1) * limit;
 
     const [reviews, total] = await Promise.all([
       prisma.customerReview.findMany({
         where: {
-          reviewerId: customerId,
+          reviewerId: userId,
         },
         include: {
           reviewer: {
@@ -111,7 +154,7 @@ export const getCustomerReviews = async (customerId: string, page: number = 1, l
       }),
       prisma.customerReview.count({
         where: {
-          reviewerId: customerId,
+          reviewerId: userId,
         },
       }),
     ]);
@@ -240,15 +283,23 @@ export const updateReview = async (reviewId: string, data: UpdateReviewData, use
       throw new Error('Unauthorized to update this review');
     }
 
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    if (data.rating !== undefined) {
+      updateData.rating = data.rating;
+    }
+
+    if (data.comment !== undefined) {
+      updateData.comment = data.comment;
+    }
+
     const review = await prisma.customerReview.update({
       where: {
         id: reviewId,
       },
-      data: {
-        rating: data.rating,
-        comment: data.comment,
-        updatedAt: new Date(),
-      },
+      data: updateData,
       include: {
         reviewer: {
           select: {

@@ -186,6 +186,7 @@ export const validateAdminUpdate = (
 
 const serviceProviderVerificationSchema = Joi.object({
   isVerified: Joi.boolean()
+    .strict()
     .required()
     .messages({
       'boolean.base': 'isVerified must be a boolean value',

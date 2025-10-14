@@ -1,40 +1,41 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
   extensions = [pgvector(map: "vector"), postgis(map: "postgis")]
 }
 
 model User {
-  id                    String           @id @default(cuid())
-  email                 String           @unique
-  password              String
-  role                  String           @default("USER")
-  isActive              Boolean          @default(false)
-  firstName             String?
-  lastName              String?
-  phone                 String?
-  imageUrl              String?
-  location              String?
-  address               String?
-  isEmailVerified       Boolean          @default(false)
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  lastLoginAt           DateTime?
-  socialmedia           String[]
-  messagesSent          Message[]        @relation("MessagesSent")
-  messagesReceived      Message[]        @relation("MessagesReceived")
-  payments              Payment[]
-  schedules             Schedule[]
-  serviceProvider       ServiceProvider?
-  notification          Notification[]
-  customerReviewsWritten CustomerReview[] @relation("CustomerReviewReviewer")
+  id                      String           @id @default(cuid())
+  email                   String           @unique
+  password                String
+  role                    String           @default("USER")
+  isActive                Boolean          @default(false)
+  firstName               String?
+  lastName                String?
+  phone                   String?
+  imageUrl                String?
+  location                String?
+  address                 String?
+  isEmailVerified         Boolean          @default(false)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  lastLoginAt             DateTime?
+  socialmedia             String[]
+  messagesSent            Message[]        @relation("MessagesSent")
+  messagesReceived        Message[]        @relation("MessagesReceived")
+  payments                Payment[]
+  schedules               Schedule[]
+  serviceProvider         ServiceProvider?
+  notification            Notification[]
+  customerReviewsWritten  CustomerReview[] @relation("CustomerReviewReviewer")
   customerReviewsReceived CustomerReview[] @relation("CustomerReviewReviewee")
-  writtenServiceReviews ServiceReview[] @relation("writtenServiceReviews")
+  writtenServiceReviews   ServiceReview[]  @relation("writtenServiceReviews")
+  serviceRequests         ServiceRequest[]
 
   @@index([email])
   @@index([role])
@@ -54,7 +55,7 @@ model ServiceProvider {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   IDCardUrl      String
-  isVerified     Boolean    @default(true)
+  isVerified     Boolean    @default(false)
   companies      Company[]
   payments       Payment[]
   schedules      Schedule[]
@@ -88,20 +89,21 @@ model Category {
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
   services    Service[]
+  serviceRequests ServiceRequest[]
 }
 
 model Service {
-  id          String          @id @default(cuid())
+  id          String   @id @default(cuid())
   providerId  String
   categoryId  String
   title       String?
   description String?
-  price       Decimal         @db.Decimal(10, 2)
-  currency    String          @default("RS")
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("RS")
   tags        String[]
   images      String[]
   videoUrl    String?
-  isActive    Boolean         @default(true)
+  isActive    Boolean  @default(true)
   workingTime String[]
 
   // Location fields
@@ -112,7 +114,7 @@ model Service {
   state               String?
   country             String?
   postalCode          String?
-  serviceRadiusKm     Float?              @default(10)
+  serviceRadiusKm     Float?    @default(10)
   locationLastUpdated DateTime?
 
   // Semantic search fields
@@ -122,13 +124,13 @@ model Service {
   combinedEmbedding    Unsupported("vector(768)")?
   embeddingUpdatedAt   DateTime?
 
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  payments    Payment[]
-  schedules   Schedule[]
-  conversations Conversation[]
-  category    Category        @relation(fields: [categoryId], references: [id])
-  provider    ServiceProvider @relation(fields: [providerId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  payments       Payment[]
+  schedules      Schedule[]
+  conversations  Conversation[]
+  category       Category        @relation(fields: [categoryId], references: [id])
+  provider       ServiceProvider @relation(fields: [providerId], references: [id])
   serviceReviews ServiceReview[]
 
   @@index([isActive])
@@ -158,24 +160,48 @@ model Schedule {
 }
 
 model Payment {
-  id            String          @id @default(cuid())
-  serviceId     String
-  providerId    String
-  userId        String
-  gateway       String?
-  chargeId      String          @unique
-  amount        Decimal         @db.Decimal(10, 2)
-  currency      String
-  status        String?
-  paidAt        DateTime?
-  refundedAt    DateTime?
-  failureReason String?
-  createdAt     DateTime        @default(now())
-  provider      ServiceProvider @relation(fields: [providerId], references: [id])
-  service       Service         @relation(fields: [serviceId], references: [id])
-  user          User            @relation(fields: [userId], references: [id])
+  id                    String          @id @default(cuid())
+  serviceId             String
+  providerId            String
+  userId                String
+  gateway               String?         @default("stripe")
+  stripePaymentIntentId String?         @unique
+  chargeId              String?         @unique
+  amount                Decimal         @db.Decimal(10, 2)
+  platformFee           Decimal?        @db.Decimal(10, 2)
+  providerAmount        Decimal?        @db.Decimal(10, 2)
+  currency              String          @default("usd")
+  status                PaymentStatus   @default(PENDING)
+  paidAt                DateTime?
+  refundedAt            DateTime?
+  failureReason         String?
+  metadata              Json?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  provider              ServiceProvider @relation(fields: [providerId], references: [id])
+  service               Service         @relation(fields: [serviceId], references: [id])
+  user                  User            @relation(fields: [userId], references: [id])
+
+  @@index([stripePaymentIntentId])
+  @@index([status])
+  @@index([createdAt])
 }
 
+model ProviderEarnings {
+  id               String    @id @default(cuid())
+  providerId       String    @unique
+  totalEarnings    Decimal   @default(0) @db.Decimal(10, 2)
+  availableBalance Decimal   @default(0) @db.Decimal(10, 2)
+  pendingBalance   Decimal   @default(0) @db.Decimal(10, 2)
+  totalWithdrawn   Decimal   @default(0) @db.Decimal(10, 2)
+  currency         String    @default("lkr")
+  stripeAccountId  String?   @unique
+  lastPayoutAt     DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([providerId])
+}
 
 model ServiceReview {
   id         String   @id @default(cuid())
@@ -206,21 +232,22 @@ model Notification {
   @@index([sentAt])
   @@map("notification")
 }
-  model Admin {
-    id         Int    @id @default(autoincrement())
-    username   String @unique
-    password   String
-    firstName  String
-    lastName   String
-  }
+
+model Admin {
+  id        Int    @id @default(autoincrement())
+  username  String @unique
+  password  String
+  firstName String
+  lastName  String
+}
 
 model Conversation {
-  id         String    @id @default(uuid())
-  userIds    String[]
-  title      String?
-  serviceId  String?
-  service    Service?   @relation(fields: [serviceId], references: [id])
-  messages   Message[]
+  id        String    @id @default(uuid())
+  userIds   String[]
+  title     String?
+  serviceId String?
+  service   Service?  @relation(fields: [serviceId], references: [id])
+  messages  Message[]
 }
 
 model Message {
@@ -256,4 +283,54 @@ enum EmailType {
   OTHER                             @map("OTHER")
 
   @@map("EmailType")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum ServiceRequestStatus {
+  PENDING
+  MATCHED
+  COMPLETED
+  CLOSED
+}
+
+model ServiceRequest {
+  id                   String                 @id @default(uuid())
+  userId               String
+  title                String?
+  description          String
+  categoryId           String?
+  latitude             Float?
+  longitude            Float?
+  address              String?
+  city                 String?
+  state                String?
+  country              String?
+  postalCode           String?
+  locationLastUpdated  DateTime?
+  // Semantic search fields
+  titleEmbedding          Unsupported("vector(768)")?
+  descriptionEmbedding    Unsupported("vector(768)")?
+  combinedEmbedding       Unsupported("vector(768)")?
+  embeddingUpdatedAt      DateTime?
+
+  status                  ServiceRequestStatus @default(PENDING)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime   @updatedAt
+
+  user                    User     @relation(fields: [userId], references: [id])
+  category                Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([userId])
 }

@@ -29,7 +29,7 @@ export const createServiceSchema = Joi.object({
     'any.required': 'Price is required'
   }),
   
-  currency: Joi.string().length(3).uppercase().optional().default('USD').messages({
+  currency: Joi.string().length(3).uppercase().optional().default('LKR').messages({
     'string.length': 'Currency must be a 3-character code (e.g., USD, EUR)',
     'string.uppercase': 'Currency must be uppercase'
   }),
@@ -74,6 +74,42 @@ export const createServiceSchema = Joi.object({
   ).max(7).optional().default([]).messages({
     'array.max': 'Maximum 7 working time slots allowed (one per day)',
     'string.pattern.base': 'Working time must be in format "Day: HH:MM AM/PM - HH:MM AM/PM" (e.g., "Monday: 9:00 AM - 5:00 PM")'
+  }),
+
+  // Location fields
+  latitude: Joi.number().min(-90).max(90).optional().messages({
+    'number.min': 'Latitude must be between -90 and 90',
+    'number.max': 'Latitude must be between -90 and 90'
+  }),
+  
+  longitude: Joi.number().min(-180).max(180).optional().messages({
+    'number.min': 'Longitude must be between -180 and 180',
+    'number.max': 'Longitude must be between -180 and 180'
+  }),
+  
+  address: Joi.string().max(500).allow('').optional().messages({
+    'string.max': 'Address must not exceed 500 characters'
+  }),
+  
+  city: Joi.string().max(100).allow('').optional().messages({
+    'string.max': 'City must not exceed 100 characters'
+  }),
+  
+  state: Joi.string().max(100).allow('').optional().messages({
+    'string.max': 'State must not exceed 100 characters'
+  }),
+  
+  country: Joi.string().max(100).allow('').optional().messages({
+    'string.max': 'Country must not exceed 100 characters'
+  }),
+  
+  postalCode: Joi.string().max(20).allow('').optional().messages({
+    'string.max': 'Postal code must not exceed 20 characters'
+  }),
+  
+  serviceRadiusKm: Joi.number().positive().max(100).optional().default(10).messages({
+    'number.positive': 'Service radius must be a positive number',
+    'number.max': 'Service radius cannot exceed 100 km'
   })
 });
 
@@ -140,6 +176,42 @@ export const updateServiceSchema = Joi.object({
   ).max(7).optional().messages({
     'array.max': 'Maximum 7 working time slots allowed (one per day)',
     'string.pattern.base': 'Working time must be in format "Day: HH:MM AM/PM - HH:MM AM/PM" (e.g., "Monday: 9:00 AM - 5:00 PM")'
+  }),
+
+  // Location fields (same as create schema)
+  latitude: Joi.number().min(-90).max(90).optional().messages({
+    'number.min': 'Latitude must be between -90 and 90',
+    'number.max': 'Latitude must be between -90 and 90'
+  }),
+  
+  longitude: Joi.number().min(-180).max(180).optional().messages({
+    'number.min': 'Longitude must be between -180 and 180',
+    'number.max': 'Longitude must be between -180 and 180'
+  }),
+  
+  address: Joi.string().max(500).allow('').optional().messages({
+    'string.max': 'Address must not exceed 500 characters'
+  }),
+  
+  city: Joi.string().max(100).allow('').optional().messages({
+    'string.max': 'City must not exceed 100 characters'
+  }),
+  
+  state: Joi.string().max(100).allow('').optional().messages({
+    'string.max': 'State must not exceed 100 characters'
+  }),
+  
+  country: Joi.string().max(100).allow('').optional().messages({
+    'string.max': 'Country must not exceed 100 characters'
+  }),
+  
+  postalCode: Joi.string().max(20).allow('').optional().messages({
+    'string.max': 'Postal code must not exceed 20 characters'
+  }),
+  
+  serviceRadiusKm: Joi.number().positive().max(100).optional().messages({
+    'number.positive': 'Service radius must be a positive number',
+    'number.max': 'Service radius cannot exceed 100 km'
   })
 });
 
@@ -173,3 +245,59 @@ export const conversationIdSchema = Joi.object({
     'any.required': 'Conversation ID is required'
   })
 });
+
+/**
+ * Validation schema for location-based service search
+ */
+export const searchServicesByLocationSchema = Joi.object({
+  lat: Joi.number().min(-90).max(90).required().messages({
+    'number.min': 'Latitude must be between -90 and 90',
+    'number.max': 'Latitude must be between -90 and 90',
+    'any.required': 'Latitude is required'
+  }),
+  lng: Joi.number().min(-180).max(180).required().messages({
+    'number.min': 'Longitude must be between -180 and 180',
+    'number.max': 'Longitude must be between -180 and 180',
+    'any.required': 'Longitude is required'
+  }),
+  radius: Joi.number().positive().max(100).optional().default(10).messages({
+    'number.positive': 'Radius must be a positive number',
+    'number.max': 'Radius cannot exceed 100 km'
+  }),
+  categoryId: Joi.string().optional(),
+  skip: Joi.number().integer().min(0).optional().default(0),
+  take: Joi.number().integer().min(1).max(100).optional().default(10)
+});
+
+/**
+ * Validation schema for geocoding address
+ */
+export const geocodeAddressSchema = Joi.object({
+  address: Joi.string().min(5).max(500).required().messages({
+    'string.min': 'Address must be at least 5 characters long',
+    'string.max': 'Address must not exceed 500 characters',
+    'any.required': 'Address is required'
+  })
+});
+
+/**
+ * Validation schema for reverse geocoding coordinates
+ */
+export const reverseGeocodeSchema = Joi.object({
+  lat: Joi.number().min(-90).max(90).optional().messages({
+    'number.min': 'Latitude must be between -90 and 90',
+    'number.max': 'Latitude must be between -90 and 90'
+  }),
+  lng: Joi.number().min(-180).max(180).optional().messages({
+    'number.min': 'Longitude must be between -180 and 180',
+    'number.max': 'Longitude must be between -180 and 180'
+  }),
+  latitude: Joi.number().min(-90).max(90).optional().messages({
+    'number.min': 'Latitude must be between -90 and 90',
+    'number.max': 'Latitude must be between -90 and 90'
+  }),
+  longitude: Joi.number().min(-180).max(180).optional().messages({
+    'number.min': 'Longitude must be between -180 and 180',
+    'number.max': 'Longitude must be between -180 and 180'
+  })
+}).or('lat', 'latitude').or('lng', 'longitude');
