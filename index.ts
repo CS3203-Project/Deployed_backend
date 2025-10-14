@@ -39,24 +39,24 @@ async function generatePrismaClient() {
 
 await generatePrismaClient();
 
-import { prisma } from './src/utils/database';
-import { queueService } from './src/services/queue.service';
+import { prisma } from './src/utils/database.js';
+import { queueService } from './src/services/queue.service.js';
 import express, { type Application } from 'express';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
-import userRoutes from './src/routes/user.route';
-import providerRoutes from './src/routes/provider.route';
-import companyRoutes from './src/routes/company.route';
-import servicesRoutes from './src/routes/services.route';
-import categoryRoutes from './src/routes/category.route';
-import adminRoutes from './src/Admin/routes/admin.route';
-import confirmationRoutes from './src/routes/confirmation.route';
-import reviewRoutes from './src/routes/review.route';
-import serviceReviewRoutes from './src/routes/serviceReview.route';
-import serviceRequestRoutes from './src/routes/serviceRequest.route';
-import paymentRoutes from './src/routes/payment.route';
-import notificationRoutes from './src/routes/notification.route';
-import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index';
+import userRoutes from './src/routes/user.route.js';
+import providerRoutes from './src/routes/provider.route.js';
+import companyRoutes from './src/routes/company.route.js';
+import servicesRoutes from './src/routes/services.route.js';
+import categoryRoutes from './src/routes/category.route.js';
+import adminRoutes from './src/Admin/routes/admin.route.js';
+import confirmationRoutes from './src/routes/confirmation.route.js';
+import reviewRoutes from './src/routes/review.route.js';
+import serviceReviewRoutes from './src/routes/serviceReview.route.js';
+import serviceRequestRoutes from './src/routes/serviceRequest.route.js';
+import paymentRoutes from './src/routes/payment.route.js';
+import notificationRoutes from './src/routes/notification.route.js';
+import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.js';
 
 // Simple database test function
 async function testDatabaseConnection() {
@@ -71,6 +71,10 @@ async function testDatabaseConnection() {
 } 
 
 const app: Application = express();
+
+// Trust proxy - required for rate limiting behind reverse proxies (ALB, nginx, etc.)
+// Set to true if behind a proxy, or specify the number of proxy hops
+app.set('trust proxy', 1);
 
 // CORS configuration (must run before any rate limiting or routes)
 const corsOptions: CorsOptions = {
