@@ -10,7 +10,10 @@ interface KnowledgeBase {
 }
 
 class ChatbotService {
-  private knowledgeBase: KnowledgeBase;
+  private knowledgeBase: KnowledgeBase = {
+    platform_guide: {},
+    quick_answers: {}
+  };
 
   constructor() {
     this.loadKnowledgeBase();

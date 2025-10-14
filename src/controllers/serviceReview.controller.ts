@@ -29,7 +29,7 @@ export const getServiceReviewsController = async (req: Request, res: Response) =
   try {
     const { serviceId } = req.params;
     const { page = 1, limit = 10 } = req.query;
-    const result = await getServiceReviews(serviceId, Number(page), Number(limit));
+    const result = await getServiceReviews(serviceId!, Number(page), Number(limit));
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -39,7 +39,7 @@ export const getServiceReviewsController = async (req: Request, res: Response) =
 export const getServiceReviewByIdController = async (req: Request, res: Response) => {
   try {
     const { reviewId } = req.params;
-    const review = await getServiceReviewById(reviewId);
+    const review = await getServiceReviewById(reviewId!);
     res.json(review);
   } catch (err: any) {
     res.status(404).json({ error: err.message });
@@ -51,7 +51,7 @@ export const updateServiceReviewController = async (req: Request, res: Response)
     const { reviewId } = req.params;
     const data: UpdateServiceReviewData = req.body;
     const userId = req.user.id;
-    const review = await updateServiceReview(reviewId, data, userId);
+    const review = await updateServiceReview(reviewId!, data, userId);
     res.json(review);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -62,7 +62,7 @@ export const deleteServiceReviewController = async (req: Request, res: Response)
   try {
     const { reviewId } = req.params;
     const userId = req.user.id;
-    const result = await deleteServiceReview(reviewId, userId);
+    const result = await deleteServiceReview(reviewId!, userId);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -72,7 +72,7 @@ export const deleteServiceReviewController = async (req: Request, res: Response)
 export const getServiceReviewStatsController = async (req: Request, res: Response) => {
   try {
     const { serviceId } = req.params;
-    const stats = await getServiceReviewStats(serviceId);
+    const stats = await getServiceReviewStats(serviceId!);
     res.json({
       success: true,
       message: 'Service review statistics retrieved successfully',
@@ -93,7 +93,7 @@ export const getServiceReviewsDetailedController = async (req: Request, res: Res
     
     const ratingFilter = rating ? Number(rating) : undefined;
     const result = await getServiceReviewsDetailed(
-      serviceId, 
+      serviceId!, 
       Number(page), 
       Number(limit), 
       ratingFilter
@@ -119,7 +119,7 @@ export const getProviderServiceReviewsController = async (req: Request, res: Res
     
     const ratingFilter = rating ? Number(rating) : undefined;
     const result = await getProviderServiceReviews(
-      providerId, 
+      providerId!, 
       Number(page), 
       Number(limit), 
       ratingFilter
@@ -141,7 +141,7 @@ export const getProviderServiceReviewsController = async (req: Request, res: Res
 export const getProviderReviewStatsController = async (req: Request, res: Response) => {
   try {
     const { providerId } = req.params;
-    const stats = await getProviderReviewStats(providerId);
+    const stats = await getProviderReviewStats(providerId!);
     res.json({
       success: true,
       message: 'Provider review statistics retrieved successfully',

@@ -36,7 +36,7 @@ export const deleteProvider = async (req: Request, res: Response, next: NextFunc
 
 export const getProviderProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const provider = await providerService.getProviderProfile((req as any).user.id);
+    const provider = await providerService.getProviderById((req as any).user.id);
     res.status(200).json(provider);
   } catch (err) {
     next(err);
@@ -45,7 +45,7 @@ export const getProviderProfile = async (req: Request, res: Response, next: Next
 
 export const getProviderById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const provider = await providerService.getProviderById(req.params.id);
+    const provider = await providerService.getProviderById(req.params.id!);
     res.status(200).json(provider);
   } catch (err) {
     next(err);
@@ -54,7 +54,7 @@ export const getProviderById = async (req: Request, res: Response, next: NextFun
 
 export const verifyProvider = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const provider = await providerService.verifyProvider(req.params.id);
+    const provider = await providerService.verifyProvider(req.params.id!);
     res.status(200).json({ 
       message: 'Service provider verified successfully', 
       provider 
@@ -66,7 +66,7 @@ export const verifyProvider = async (req: Request, res: Response, next: NextFunc
 
 export const unverifyProvider = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const provider = await providerService.unverifyProvider(req.params.id);
+    const provider = await providerService.unverifyProvider(req.params.id!);
     res.status(200).json({ 
       message: 'Service provider unverified successfully', 
       provider 

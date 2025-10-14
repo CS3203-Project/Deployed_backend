@@ -193,11 +193,11 @@ async function sendConfirmationEmails(schedule: any, conversationId: string, eve
     console.error(`❌ Failed to queue ${eventType} emails:`, emailError);
     
     // Enhanced error logging for better debugging
-    if (emailError.message?.includes('daily limit') || emailError.message?.includes('sending limit')) {
+    if ((emailError as Error).message?.includes('daily limit') || (emailError as Error).message?.includes('sending limit')) {
       console.error('🚫 Email service has hit daily sending limits');
       console.error('💡 Recommendation: Upgrade to a professional email service (SendGrid, AWS SES, Mailgun)');
       console.error('📝 Booking was still processed successfully - only email notifications failed');
-    } else if (emailError.message?.includes('authentication')) {
+    } else if ((emailError as Error).message?.includes('authentication')) {
       console.error('🔐 Email service authentication failed');
       console.error('💡 Check email credentials and app password configuration');
     } else {
@@ -223,10 +223,10 @@ export const getConfirmationController = async (req: Request, res: Response) => 
     }
     
     // Find or create schedule for this conversation
-    const schedule = await findOrCreateScheduleForConversation(conversationId);
+    const schedule = await findOrCreateScheduleForConversation(conversationId!);
     
     // Convert schedule to confirmation format
-    const confirmation = scheduleToConfirmation(schedule, conversationId);
+    const confirmation = scheduleToConfirmation(schedule, conversationId!);
     
     res.json(confirmation);
   } catch (error) {
@@ -239,7 +239,7 @@ export const createConfirmationController = async (req: Request, res: Response) 
   try {
     const { conversationId, customerConfirmation = false, providerConfirmation = false, startDate = null, endDate = null, serviceFee = null, currency = 'USD' } = req.body;
     
-    if (!conversationId) {
+    if (!conversationId!) {
       return res.status(400).json({ error: 'conversationId is required' });
     }
     
@@ -253,7 +253,7 @@ export const createConfirmationController = async (req: Request, res: Response) 
     }
     
     // Find or create schedule for this conversation
-    let schedule = await findOrCreateScheduleForConversation(conversationId);
+    let schedule = await findOrCreateScheduleForConversation(conversationId!);
     
     // Update the schedule with provided values
     schedule = await prisma.schedule.update({
@@ -274,7 +274,7 @@ export const createConfirmationController = async (req: Request, res: Response) 
     });
     
     // Convert to confirmation format
-    const confirmation = scheduleToConfirmation(schedule, conversationId);
+    const confirmation = scheduleToConfirmation(schedule, conversationId!);
 
     // Notify communication service for real-time update
     try {
@@ -312,7 +312,7 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
     }
     
     // Find or create schedule for this conversation
-    let schedule = await findOrCreateScheduleForConversation(conversationId);
+    let schedule = await findOrCreateScheduleForConversation(conversationId!);
     
     // Prepare update data, only including defined values
     const updateData: any = {};
@@ -348,7 +348,7 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
     });
     
     // Convert to confirmation format
-    const confirmation = scheduleToConfirmation(schedule, conversationId);
+    const confirmation = scheduleToConfirmation(schedule, conversationId!);
 
     // Notify communication service for real-time update
     try {
@@ -362,7 +362,7 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
     }
 
     // Send email notification
-    await sendConfirmationEmails(schedule, conversationId, 'BOOKING_CANCELLATION_MODIFICATION');
+    await sendConfirmationEmails(schedule, conversationId!, 'BOOKING_CANCELLATION_MODIFICATION');
     
     res.json(confirmation);
   } catch (error) {

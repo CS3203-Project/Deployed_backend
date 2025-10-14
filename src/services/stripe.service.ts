@@ -108,7 +108,10 @@ class StripeService {
           status = PaymentStatus.SUCCEEDED;
           paidAt = new Date();
           // Update provider earnings
-          await this.updateProviderEarnings(payment.providerId, payment.providerAmount || 0);
+          await this.updateProviderEarnings(
+            payment.providerId, 
+            payment.providerAmount ? Number(payment.providerAmount) : 0
+          );
           break;
         case 'processing':
           status = PaymentStatus.PROCESSING;
@@ -116,7 +119,10 @@ class StripeService {
         case 'canceled':
           status = PaymentStatus.CANCELED;
           break;
-        case 'payment_failed':
+        case 'requires_payment_method':
+        case 'requires_confirmation':
+        case 'requires_action':
+        case 'requires_capture':
           status = PaymentStatus.FAILED;
           break;
         default:
