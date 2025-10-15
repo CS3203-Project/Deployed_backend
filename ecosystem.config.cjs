@@ -18,8 +18,8 @@ module.exports = {
     },
     {
       name: 'backend-dev',
-      script: 'node_modules/.bin/nodemon',
-      args: '--exec tsx index.ts',
+      script: 'npm',
+      args: 'run dev',
       instances: 1,
       autorestart: true,
       watch: ['src', 'index.ts'],
