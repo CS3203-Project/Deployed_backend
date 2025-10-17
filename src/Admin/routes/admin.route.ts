@@ -3,7 +3,7 @@ import { adminController } from '../controllers/admin.controller.js';
 import { adminAuthMiddleware } from '../middlewares/admin.middleware.js';
 import { validateAdminLogin, validateAdminRegistration, validateAdminUpdate, validateServiceProviderVerification } from '../validators/admin.validator.js';
 
-const router = Router();
+const router: Router = Router();
 
 // Public routes
 router.post('/register', validateAdminRegistration, adminController.register);
