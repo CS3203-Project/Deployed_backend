@@ -255,42 +255,8 @@ export const getProviderById = async (id: string) => {
           firstName: true,
           lastName: true,
           imageUrl: true,
-          role: true
-        }
-      },
-      services: {
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          price: true,
-          currency: true,
-          images: true,
-          isActive: true
-        }
-      }
-    }
-  });
-
-  if (!provider) {
-    throw new Error('Service provider not found');
-  }
-
-  return provider;
-};
-
-export const getProviderByUserId = async (userId: string) => {
-  const provider = await prisma.serviceProvider.findUnique({
-    where: { userId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          imageUrl: true,
-          role: true
+          role: true,
+          phone: true
         }
       },
       services: {
