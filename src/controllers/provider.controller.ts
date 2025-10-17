@@ -36,7 +36,7 @@ export const deleteProvider = async (req: Request, res: Response, next: NextFunc
 
 export const getProviderProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const provider = await providerService.getProviderByUserId((req as any).user.id);
+    const provider = await providerService.getProviderProfile((req as any).user.id);
     res.status(200).json(provider);
   } catch (err) {
     next(err);

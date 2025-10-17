@@ -30,6 +30,22 @@ export interface UpdateServiceRequestData {
   postalCode?: string;
 }
 
+export interface MatchingService {
+  id: string;
+  title: string | null;
+  description: string | null;
+  price: number | null;
+  currency: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postalCode: string | null;
+  providerId: string;
+  createdAt: Date;
+  similarity: number;
+}
+
 // Helper function to generate embeddings for service requests
 async function generateServiceRequestEmbeddings(title: string | null | undefined, description: string) {
   try {
@@ -490,7 +506,15 @@ interface ServiceRequestWithEmbedding {
   // ... other fields
 }
 
-export const findMatchingServices = async (serviceRequestId: string, page = 1, limit = 10) => {
+export const findMatchingServices = async (serviceRequestId: string, page = 1, limit = 10): Promise<{
+  matchingServices: MatchingService[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}> => {
   try {
     console.log(`Finding matches for service request ID: ${serviceRequestId}`);
 
@@ -547,8 +571,8 @@ export const findMatchingServices = async (serviceRequestId: string, page = 1, l
     const skip = (page - 1) * limit;
     
     // SQL query using pgvector's cosine similarity - without conditional categoryId filter
-    let matchingServices;
-    let countResult;
+    let matchingServices: MatchingService[];
+    let countResult: { total: number }[];
     
     // We need to handle the categoryId filter differently
     if (serviceRequest.categoryId) {
@@ -575,7 +599,7 @@ export const findMatchingServices = async (serviceRequestId: string, page = 1, l
           ORDER BY similarity DESC
           LIMIT ${limit}
           OFFSET ${skip}
-        `;
+        ` as MatchingService[];
         console.log(`Found ${matchingServices.length} matching services with category filter`);
       } catch (queryError) {
         console.error('Error executing category-filtered query:', queryError);
@@ -589,8 +613,8 @@ export const findMatchingServices = async (serviceRequestId: string, page = 1, l
           FROM "Service" s
           WHERE s."isActive" = true
           AND s."categoryId" = ${serviceRequest.categoryId}
-        `;
-        console.log(`Total count with category filter: ${countResult[0].total}`);
+        ` as { total: number }[];
+        console.log(`Total count with category filter: ${countResult[0]?.total || 0}`);
       } catch (countError) {
         console.error('Error executing category-filtered count query:', countError);
         throw countError;
@@ -619,7 +643,7 @@ export const findMatchingServices = async (serviceRequestId: string, page = 1, l
           ORDER BY similarity DESC
           LIMIT ${limit}
           OFFSET ${skip}
-        `;
+        ` as MatchingService[];
         console.log(`Found ${matchingServices.length} matching services without category filter`);
       } catch (queryError) {
         console.error('Error executing query without category filter:', queryError);
@@ -632,23 +656,23 @@ export const findMatchingServices = async (serviceRequestId: string, page = 1, l
           SELECT COUNT(*) as total
           FROM "Service" s
           WHERE s."isActive" = true
-        `;
-        console.log(`Total count without category filter: ${countResult[0].total}`);
+        ` as { total: number }[];
+        console.log(`Total count without category filter: ${countResult[0]?.total || 0}`);
       } catch (countError) {
         console.error('Error executing count query without category filter:', countError);
         throw countError;
       }
     }
     
-    const total = Number(countResult[0].total);
+    const total = Number(countResult[0]?.total || 0);
     
     // Log some info about the returned services
     console.log('Service matching results summary:');
     console.log(`- Total services found: ${total}`);
     console.log(`- Services returned for this page: ${matchingServices.length}`);
     if (matchingServices.length > 0) {
-      console.log(`- Top match similarity: ${matchingServices[0].similarity}`);
-      console.log(`- First match title: ${matchingServices[0].title}`);
+      console.log(`- Top match similarity: ${matchingServices[0]!.similarity}`);
+      console.log(`- First match title: ${matchingServices[0]!.title}`);
     }
     
     return {
