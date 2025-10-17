@@ -183,6 +183,28 @@ class QueueService {
     await this.publishEmailEvent(event);
   }
 
+  async sendBookingReminder(data: {
+    conversationId?: string;
+    scheduleId: string;
+    customerEmail: string;
+    providerEmail: string;
+    customerName: string;
+    providerName: string;
+    serviceName: string;
+    startDate: string;
+    endDate: string;
+    serviceFee?: number;
+    currency?: string;
+  }): Promise<void> {
+    const event: EmailEvent = {
+      type: 'BOOKING_REMINDER',
+      data,
+      timestamp: new Date().toISOString()
+    };
+
+    await this.publishEmailEvent(event);
+  }
+
   async sendMessageOrReviewNotification(data: {
     conversationId?: string;
     customerEmail: string;
@@ -202,7 +224,7 @@ class QueueService {
       },
       timestamp: new Date().toISOString()
     };
-    
+
     await this.publishEmailEvent(event);
   }
 

@@ -204,7 +204,7 @@ export class SemanticSearchService {
    */
   async updateAllServiceEmbeddings(batchSize: number = 5) { // Reduced batch size for free tier
     try {
-      console.log('🚀 Starting batch embedding update...');
+      console.log('=====> Starting batch embedding update...');
 
       // Get services without embeddings (smaller batches for free tier)
       const services = await prisma.$queryRawUnsafe(`

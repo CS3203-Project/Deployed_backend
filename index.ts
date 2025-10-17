@@ -39,25 +39,26 @@ async function generatePrismaClient() {
 
 await generatePrismaClient();
 
-import { prisma } from './src/utils/database.js';
-import { queueService } from './src/services/queue.service.js';
+import { prisma } from './src/utils/database';
+import { queueService } from './src/services/queue.service';
+import { scheduledJobsService } from './src/services/scheduled-jobs.service';
 import express, { type Application } from 'express';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
-import userRoutes from './src/routes/user.route.js';
-import providerRoutes from './src/routes/provider.route.js';
-import companyRoutes from './src/routes/company.route.js';
-import servicesRoutes from './src/routes/services.route.js';
-import categoryRoutes from './src/routes/category.route.js';
-import adminRoutes from './src/Admin/routes/admin.route.js';
-import confirmationRoutes from './src/routes/confirmation.route.js';
-import reviewRoutes from './src/routes/review.route.js';
-import serviceReviewRoutes from './src/routes/serviceReview.route.js';
-import serviceRequestRoutes from './src/routes/serviceRequest.route.js';
-import paymentRoutes from './src/routes/payment.route.js';
-import notificationRoutes from './src/routes/notification.route.js';
-import healthRoutes from './src/routes/health.route.js';
-import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.js';
+import userRoutes from './src/routes/user.route';
+import providerRoutes from './src/routes/provider.route';
+import companyRoutes from './src/routes/company.route';
+import servicesRoutes from './src/routes/services.route';
+import categoryRoutes from './src/routes/category.route';
+import adminRoutes from './src/Admin/routes/admin.route';
+import confirmationRoutes from './src/routes/confirmation.route';
+import reviewRoutes from './src/routes/review.route';
+import serviceReviewRoutes from './src/routes/serviceReview.route';
+import serviceRequestRoutes from './src/routes/serviceRequest.route';
+import paymentRoutes from './src/routes/payment.route';
+import notificationRoutes from './src/routes/notification.route';
+import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index';
+import scheduleRoutes from './src/routes/schedule.route';
 
 // Simple database test function
 async function testDatabaseConnection() {
@@ -72,10 +73,6 @@ async function testDatabaseConnection() {
 } 
 
 const app: Application = express();
-
-// Trust proxy - required for rate limiting behind reverse proxies (ALB, nginx, etc.)
-// Set to true if behind a proxy, or specify the number of proxy hops
-app.set('trust proxy', 1);
 
 // CORS configuration (must run before any rate limiting or routes)
 const corsOptions: CorsOptions = {
@@ -103,12 +100,6 @@ app.use(limiter);
 // Increase JSON payload limit for file uploads
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Health check routes (no auth required)
-app.use('/', healthRoutes);
-app.use('/api', healthRoutes);
-
-// API routes
 app.use('/api/users', userRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/companies', companyRoutes);
@@ -122,6 +113,7 @@ app.use('/api/service-requests', serviceRequestRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/schedule', scheduleRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
@@ -145,11 +137,35 @@ async function startServer() {
     console.error('=====> RabbitMQ connection failed, emails will not be sent:', error);
     // Don't exit - continue without email functionality
   }
+
+  // Start scheduled jobs
+  try {
+    scheduledJobsService.startAllJobs();
+    console.log('=====> Scheduled jobs started');
+  } catch (error) {
+    console.error('=====> Failed to start scheduled jobs:', error);
+    // Don't exit - continue without scheduled jobs
+  }
   
   app.listen(PORT, () => {
     console.log(`=====> Server running on port ${PORT}`);
   });
 }
+
+// Graceful shutdown for scheduled jobs
+process.on('SIGINT', async () => {
+  console.log('==xx== Received SIGINT, shutting down scheduled jobs...');
+  scheduledJobsService.stopAllJobs();
+  await queueService.close();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('==xx== Received SIGTERM, shutting down scheduled jobs...');
+  scheduledJobsService.stopAllJobs();
+  await queueService.close();
+  process.exit(0);
+});
 
 // Start the server
 startServer().catch((error) => {

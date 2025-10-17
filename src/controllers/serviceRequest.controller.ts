@@ -64,7 +64,7 @@ export const createServiceRequest = async (req: Request, res: Response) => {
 
     // Fire-and-forget: Send notifications to matching providers (don't wait)
     if (newRequest.id) {
-      console.log('🚀 STARTING AUTOMATIC MATCHING NOTIFICATIONS...'); // Debug log
+      console.log('=====> STARTING AUTOMATIC MATCHING NOTIFICATIONS...'); // Debug log
       sendNotificationsToMatchingProviders(newRequest.id).then(() => {
         console.log('✅ NOTIFICATIONS SENT SUCCESSFULLY');
       }).catch(error => {
