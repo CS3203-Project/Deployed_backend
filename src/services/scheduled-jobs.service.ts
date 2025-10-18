@@ -1,5 +1,5 @@
 import * as cron from 'node-cron';
-import { bookingReminderService } from './booking-reminder.service';
+import { bookingReminderService } from './booking-reminder.service.js';
 
 export class ScheduledJobsService {
   private bookingReminderJob: cron.ScheduledTask | null = null;

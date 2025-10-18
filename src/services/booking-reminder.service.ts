@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { queueService } from './queue.service';
+import { queueService } from './queue.service.js';
 
 const prisma = new PrismaClient();
 
