@@ -108,16 +108,13 @@ class StripeService {
           status = PaymentStatus.SUCCEEDED;
           paidAt = new Date();
           // Update provider earnings
-          await this.updateProviderEarnings(payment.providerId, payment.providerAmount || 0);
+          await this.updateProviderEarnings(payment.providerId, Number(payment.providerAmount || 0));
           break;
         case 'processing':
           status = PaymentStatus.PROCESSING;
           break;
         case 'canceled':
           status = PaymentStatus.CANCELED;
-          break;
-        case 'payment_failed':
-          status = PaymentStatus.FAILED;
           break;
         default:
           status = PaymentStatus.PENDING;
