@@ -2,7 +2,7 @@ import { Router } from 'express';
 import paymentController from '../controllers/payment.controller.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
-const router: Router = Router();
+const router = Router();
 
 /**
  * @route POST /api/payments/create-intent

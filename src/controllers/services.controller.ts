@@ -141,9 +141,49 @@ export const updateService = async (req: Request, res: Response, next: NextFunct
   try {
     const { id } = req.params;
     const updateData = req.body;
-    
+
+    // Handle location data if provided
+    if (updateData.address || (updateData.latitude && updateData.longitude)) {
+      try {
+        let locationData;
+
+        if (updateData.latitude && updateData.longitude) {
+          // Manual coordinates provided - validate and reverse geocode
+          if (!googleMapsService.validateCoordinates(updateData.latitude, updateData.longitude)) {
+            return res.status(400).json({
+              success: false,
+              message: 'Invalid coordinates provided'
+            });
+          }
+
+          locationData = await googleMapsService.reverseGeocode(
+            updateData.latitude,
+            updateData.longitude
+          );
+        } else if (updateData.address) {
+          // Address provided - geocode to get coordinates
+          locationData = await googleMapsService.geocodeAddress(updateData.address);
+        }
+
+        if (locationData) {
+          // Merge location data into update data
+          updateData.latitude = locationData.lat;
+          updateData.longitude = locationData.lng;
+          updateData.address = locationData.formatted_address;
+          updateData.city = locationData.city;
+          updateData.state = locationData.state;
+          updateData.country = locationData.country;
+          updateData.postalCode = locationData.postal_code;
+          updateData.locationLastUpdated = new Date();
+        }
+      } catch (locationError) {
+        console.warn('Location processing failed during update:', locationError);
+        // Continue without location data rather than failing the entire update
+      }
+    }
+
     const updatedService = await serviceService.updateService(id!, updateData);
-    
+
     res.status(200).json({
       success: true,
       message: 'Service updated successfully',

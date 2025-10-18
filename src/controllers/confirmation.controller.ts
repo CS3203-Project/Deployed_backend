@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/database.js';
 import { queueService } from '../services/queue.service.js';
-import { io } from '../../index.js';
-
+    const metaEnv: any = (import.meta as any)?.env ?? (process.env as any);
+    const MESSAGE_URL = metaEnv.PROD
+      ? (metaEnv.VITE_API_BASE_URL_MESSAGES_PROD?.replace('messaging', 'api'))
+      : (metaEnv.VITE_API_BASE_URL_MESSAGES?.replace('messaging', 'api'));
 // Confirmation data now maps to Schedule table fields
 // conversationId will be used to find related schedules via conversation user IDs
 
@@ -194,11 +196,11 @@ async function sendConfirmationEmails(schedule: any, conversationId: string, eve
     console.error(`❌ Failed to queue ${eventType} emails:`, emailError);
     
     // Enhanced error logging for better debugging
-    if ((emailError as Error).message?.includes('daily limit') || (emailError as Error).message?.includes('sending limit')) {
+    if (emailError.message?.includes('daily limit') || emailError.message?.includes('sending limit')) {
       console.error('🚫 Email service has hit daily sending limits');
       console.error('💡 Recommendation: Upgrade to a professional email service (SendGrid, AWS SES, Mailgun)');
       console.error('📝 Booking was still processed successfully - only email notifications failed');
-    } else if ((emailError as Error).message?.includes('authentication')) {
+    } else if (emailError.message?.includes('authentication')) {
       console.error('🔐 Email service authentication failed');
       console.error('💡 Check email credentials and app password configuration');
     } else {
@@ -224,10 +226,10 @@ export const getConfirmationController = async (req: Request, res: Response) => 
     }
     
     // Find or create schedule for this conversation
-    const schedule = await findOrCreateScheduleForConversation(conversationId!);
+    const schedule = await findOrCreateScheduleForConversation(conversationId);
     
     // Convert schedule to confirmation format
-    const confirmation = scheduleToConfirmation(schedule, conversationId!);
+    const confirmation = scheduleToConfirmation(schedule, conversationId);
     
     res.json(confirmation);
   } catch (error) {
@@ -240,7 +242,7 @@ export const createConfirmationController = async (req: Request, res: Response) 
   try {
     const { conversationId, customerConfirmation = false, providerConfirmation = false, startDate = null, endDate = null, serviceFee = null, currency = 'USD' } = req.body;
     
-    if (!conversationId!) {
+    if (!conversationId) {
       return res.status(400).json({ error: 'conversationId is required' });
     }
     
@@ -254,7 +256,7 @@ export const createConfirmationController = async (req: Request, res: Response) 
     }
     
     // Find or create schedule for this conversation
-    let schedule = await findOrCreateScheduleForConversation(conversationId!);
+    let schedule = await findOrCreateScheduleForConversation(conversationId);
     
     // Update the schedule with provided values
     schedule = await prisma.schedule.update({
@@ -275,11 +277,11 @@ export const createConfirmationController = async (req: Request, res: Response) 
     });
     
     // Convert to confirmation format
-    const confirmation = scheduleToConfirmation(schedule, conversationId!);
+    const confirmation = scheduleToConfirmation(schedule, conversationId);
 
     // Notify communication service for real-time update
     try {
-      await fetch('http://localhost:3001/api/confirmation/broadcast', {
+      await fetch(`${MESSAGE_URL}/confirmation/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversationId, confirmation })
@@ -313,7 +315,7 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
     }
     
     // Find or create schedule for this conversation
-    let schedule = await findOrCreateScheduleForConversation(conversationId!);
+    let schedule = await findOrCreateScheduleForConversation(conversationId);
     
     // Prepare update data, only including defined values
     const updateData: any = {};
@@ -349,16 +351,23 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
     });
     
     // Convert to confirmation format
-    const confirmation = scheduleToConfirmation(schedule, conversationId!);
+    const confirmation = scheduleToConfirmation(schedule, conversationId);
+    // Safely access environment variables: prefer import.meta.env (Vite) but fall back to process.env (Node).
 
-    // Emit real-time update via Socket.IO
-    io.to(`conversation_${conversationId}`).emit('confirmation_updated', {
-      conversationId,
-      confirmation
-    });
+
+    // Notify communication service for real-time update
+    try {
+      await fetch(`${MESSAGE_URL}/confirmation/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId, confirmation })
+      });
+    } catch (notifyErr) {
+      console.error('Failed to notify communication service:', notifyErr);
+    }
 
     // Send email notification
-    await sendConfirmationEmails(schedule, conversationId!, 'BOOKING_CANCELLATION_MODIFICATION');
+    await sendConfirmationEmails(schedule, conversationId, 'BOOKING_CANCELLATION_MODIFICATION');
     
     res.json(confirmation);
   } catch (error) {

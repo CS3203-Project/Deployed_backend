@@ -190,7 +190,7 @@ export const getAllCategories = async (filters: CategoryFilters = {}) => {
 
     return categories;
   } catch (error) {
-    throw new Error(`Failed to fetch categories: ${(error as Error).message}`);
+    throw new Error(`Failed to fetch categories: ${error.message}`);
   }
 };
 
@@ -250,7 +250,7 @@ export const getCategoryById = async (id: string, options: CategoryOptions = {})
 
     return category;
   } catch (error) {
-    throw new Error(`Failed to fetch category: ${(error as Error).message}`);
+    throw new Error(`Failed to fetch category: ${error.message}`);
   }
 };
 
@@ -310,7 +310,7 @@ export const getCategoryBySlug = async (slug: string, options: CategoryOptions =
 
     return category;
   } catch (error) {
-    throw new Error(`Failed to fetch category: ${(error as Error).message}`);
+    throw new Error(`Failed to fetch category: ${error.message}`);
   }
 };
 
@@ -403,7 +403,7 @@ export const updateCategory = async (id: string, updateData: CategoryUpdateData)
 
     return updatedCategory;
   } catch (error) {
-    throw new Error(`Failed to update category: ${(error as Error).message}`);
+    throw new Error(`Failed to update category: ${error.message}`);
   }
 };
 
@@ -464,7 +464,7 @@ export const deleteCategory = async (id: string, options: DeleteOptions = {}) =>
 
     return deletedCategory;
   } catch (error) {
-    throw new Error(`Failed to delete category: ${(error as Error).message}`);
+    throw new Error(`Failed to delete category: ${error.message}`);
   }
 };
 
@@ -485,7 +485,7 @@ export const getRootCategories = async (options: RootCategoryOptions = {}) => {
       includeServices: true
     });
   } catch (error) {
-    throw new Error(`Failed to fetch root categories: ${(error as Error).message}`);
+    throw new Error(`Failed to fetch root categories: ${error.message}`);
   }
 };
 
@@ -522,7 +522,7 @@ export const getCategoryHierarchy = async (categoryId: string) => {
 
     return category;
   } catch (error) {
-    throw new Error(`Failed to fetch category hierarchy: ${(error as Error).message}`);
+    throw new Error(`Failed to fetch category hierarchy: ${error.message}`);
   }
 };
 
@@ -533,14 +533,14 @@ export const getCategoryHierarchy = async (categoryId: string) => {
  * @returns {Promise<boolean>} True if circular reference would be created
  */
 const checkCircularReference = async (categoryId: string, newParentId: string): Promise<boolean> => {
-  let currentParentId: string | null = newParentId;
+  let currentParentId = newParentId;
   
   while (currentParentId) {
     if (currentParentId === categoryId) {
       return true; // Circular reference found
     }
     
-    const parent: {parentId: string | null} | null = await prisma.category.findUnique({
+    const parent = await prisma.category.findUnique({
       where: { id: currentParentId },
       select: { parentId: true }
     });
@@ -600,6 +600,6 @@ export const searchCategories = async (searchTerm: string, options: SearchOption
 
     return categories;
   } catch (error) {
-    throw new Error(`Failed to search categories: ${(error as Error).message}`);
+    throw new Error(`Failed to search categories: ${error.message}`);
   }
 };

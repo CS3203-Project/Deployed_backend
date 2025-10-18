@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { queueService } from './queue.service.js';
+import { queueService } from './queue.service';
 
 const prisma = new PrismaClient();
 
@@ -8,7 +8,7 @@ export class BookingReminderService {
   /**
    * Find confirmed bookings starting within the next 24 hours
    */
-  async getUpcomingConfirmedBookings(hoursAhead: number = 24): Promise<any[]> {
+  async getUpcomingConfirmedBookings(hoursAhead: number = 5): Promise<any[]> {
     const targetTime = new Date();
     targetTime.setHours(targetTime.getHours() + hoursAhead);
 

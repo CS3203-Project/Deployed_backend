@@ -1,9 +1,10 @@
-import { Router } from 'express';
+import { Router, type Router as ExpressRouter } from 'express';
 import { adminController } from '../controllers/admin.controller.js';
 import { adminAuthMiddleware } from '../middlewares/admin.middleware.js';
 import { validateAdminLogin, validateAdminRegistration, validateAdminUpdate, validateServiceProviderVerification } from '../validators/admin.validator.js';
+import { scheduledJobsController } from '../../controllers/scheduled-jobs.controller.js';
 
-const router: Router = Router();
+const router: ExpressRouter = Router();
 
 // Public routes
 router.post('/register', validateAdminRegistration, adminController.register);
@@ -25,5 +26,9 @@ router.get('/analytics/revenue-chart', adminAuthMiddleware, adminController.getR
 router.get('/analytics/top-providers', adminAuthMiddleware, adminController.getTopProviders);
 router.get('/analytics/recent-payments', adminAuthMiddleware, adminController.getRecentPayments);
 router.get('/analytics/payment-statistics', adminAuthMiddleware, adminController.getPaymentStatistics);
+
+// Scheduled Jobs routes
+router.get('/scheduled-jobs/trigger-reminder', adminAuthMiddleware, scheduledJobsController.triggerBookingReminder);
+router.post('/scheduled-jobs/send-immediate-reminder', adminAuthMiddleware, scheduledJobsController.sendImmediateReminder);
 
 export default router;

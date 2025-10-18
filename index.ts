@@ -39,28 +39,26 @@ async function generatePrismaClient() {
 
 await generatePrismaClient();
 
-import { prisma } from './src/utils/database.js';
-import { queueService } from './src/services/queue.service.js';
-import { scheduledJobsService } from './src/services/scheduled-jobs.service.js';
+import { prisma } from './src/utils/database';
+import { queueService } from './src/services/queue.service';
+import { scheduledJobsService } from './src/services/scheduled-jobs.service';
 import express, { type Application } from 'express';
-import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
-import userRoutes from './src/routes/user.route.js';
-import providerRoutes from './src/routes/provider.route.js';
-import companyRoutes from './src/routes/company.route.js';
-import servicesRoutes from './src/routes/services.route.js';
-import categoryRoutes from './src/routes/category.route.js';
-import adminRoutes from './src/Admin/routes/admin.route.js';
-import confirmationRoutes from './src/routes/confirmation.route.js';
-import reviewRoutes from './src/routes/review.route.js';
-import serviceReviewRoutes from './src/routes/serviceReview.route.js';
-import serviceRequestRoutes from './src/routes/serviceRequest.route.js';
-import paymentRoutes from './src/routes/payment.route.js';
-import notificationRoutes from './src/routes/notification.route.js';
-import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.js';
-import scheduleRoutes from './src/routes/schedule.route.js';
+import userRoutes from './src/routes/user.route';
+import providerRoutes from './src/routes/provider.route';
+import companyRoutes from './src/routes/company.route';
+import servicesRoutes from './src/routes/services.route';
+import categoryRoutes from './src/routes/category.route';
+import adminRoutes from './src/Admin/routes/admin.route';
+import confirmationRoutes from './src/routes/confirmation.route';
+import reviewRoutes from './src/routes/review.route';
+import serviceReviewRoutes from './src/routes/serviceReview.route';
+import serviceRequestRoutes from './src/routes/serviceRequest.route';
+import paymentRoutes from './src/routes/payment.route';
+import notificationRoutes from './src/routes/notification.route';
+import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index';
+import scheduleRoutes from './src/routes/schedule.route';
 
 // Simple database test function
 async function testDatabaseConnection() {
@@ -119,49 +117,6 @@ app.use('/api/schedule', scheduleRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
-// Create HTTP server and Socket.IO server
-const server = createServer(app);
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: true,
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
-
-// Socket.IO event handlers
-io.on('connection', (socket) => {
-  console.log('=====> User connected:', socket.id);
-
-  socket.on('user:join', (data: { userId: string }) => {
-    console.log('=====> User joined:', data.userId);
-    socket.join(`user_${data.userId}`);
-  });
-
-  socket.on('conversation:enter', (data: { userId: string; conversationId: string }) => {
-    console.log('=====> User entered conversation:', data.conversationId);
-    socket.join(`conversation_${data.conversationId}`);
-  });
-
-  socket.on('conversation:leave', (data: { userId: string }) => {
-    console.log('=====> User left conversation');
-    // Leave all conversation rooms for this user
-    const rooms = Array.from(socket.rooms);
-    rooms.forEach(room => {
-      if (room.startsWith('conversation_')) {
-        socket.leave(room);
-      }
-    });
-  });
-
-  socket.on('disconnect', () => {
-    console.log('=====> User disconnected:', socket.id);
-  });
-});
-
-// Export io for use in other modules
-export { io };
-
 // Start server with basic database test
 async function startServer() {
   console.log('=====> Starting server...');
@@ -192,7 +147,7 @@ async function startServer() {
     // Don't exit - continue without scheduled jobs
   }
   
-  server.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(`=====> Server running on port ${PORT}`);
   });
 }

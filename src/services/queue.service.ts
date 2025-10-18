@@ -42,7 +42,7 @@ class QueueService {
 
     try {
       this.isConnecting = true;
-      const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
+      const rabbitmqUrl = process.env.RABBITMQ_URL;
       
       // Add connection options for better stability
       this.connection = await amqp.connect(rabbitmqUrl, {
