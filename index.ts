@@ -76,7 +76,29 @@ const app: Application = express();
 
 // CORS configuration (must run before any rate limiting or routes)
 const corsOptions: CorsOptions = {
-  origin: true, 
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:5173', // Vite dev server
+      'http://localhost:3000', // Local development
+      'https://zia-tgsix.ondigitalocean.app', // Production frontend
+      'https://stingray-app-t6jhs.ondigitalocean.app', // Backend domain (if needed)
+      process.env.FRONTEND_URL // Environment variable for frontend URL
+    ].filter(Boolean); // Remove undefined values
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['*'], 
   credentials: true,
