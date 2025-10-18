@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/database.js';
 import { queueService } from '../services/queue.service.js';
+import { io } from '../../index.js';
 
 // Confirmation data now maps to Schedule table fields
 // conversationId will be used to find related schedules via conversation user IDs
@@ -350,16 +351,11 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
     // Convert to confirmation format
     const confirmation = scheduleToConfirmation(schedule, conversationId!);
 
-    // Notify communication service for real-time update
-    try {
-      await fetch('http://localhost:3001/api/confirmation/broadcast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId, confirmation })
-      });
-    } catch (notifyErr) {
-      console.error('Failed to notify communication service:', notifyErr);
-    }
+    // Emit real-time update via Socket.IO
+    io.to(`conversation_${conversationId}`).emit('confirmation_updated', {
+      conversationId,
+      confirmation
+    });
 
     // Send email notification
     await sendConfirmationEmails(schedule, conversationId!, 'BOOKING_CANCELLATION_MODIFICATION');

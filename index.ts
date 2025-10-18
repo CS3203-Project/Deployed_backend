@@ -43,6 +43,8 @@ import { prisma } from './src/utils/database.js';
 import { queueService } from './src/services/queue.service.js';
 import { scheduledJobsService } from './src/services/scheduled-jobs.service.js';
 import express, { type Application } from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
 import userRoutes from './src/routes/user.route.js';
@@ -117,6 +119,49 @@ app.use('/api/schedule', scheduleRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
+// Create HTTP server and Socket.IO server
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: true,
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// Socket.IO event handlers
+io.on('connection', (socket) => {
+  console.log('=====> User connected:', socket.id);
+
+  socket.on('user:join', (data: { userId: string }) => {
+    console.log('=====> User joined:', data.userId);
+    socket.join(`user_${data.userId}`);
+  });
+
+  socket.on('conversation:enter', (data: { userId: string; conversationId: string }) => {
+    console.log('=====> User entered conversation:', data.conversationId);
+    socket.join(`conversation_${data.conversationId}`);
+  });
+
+  socket.on('conversation:leave', (data: { userId: string }) => {
+    console.log('=====> User left conversation');
+    // Leave all conversation rooms for this user
+    const rooms = Array.from(socket.rooms);
+    rooms.forEach(room => {
+      if (room.startsWith('conversation_')) {
+        socket.leave(room);
+      }
+    });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('=====> User disconnected:', socket.id);
+  });
+});
+
+// Export io for use in other modules
+export { io };
+
 // Start server with basic database test
 async function startServer() {
   console.log('=====> Starting server...');
@@ -147,7 +192,7 @@ async function startServer() {
     // Don't exit - continue without scheduled jobs
   }
   
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`=====> Server running on port ${PORT}`);
   });
 }
