@@ -45,6 +45,8 @@ import { scheduledJobsService } from './src/services/scheduled-jobs.service.js';
 import express, { type Application } from 'express';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import userRoutes from './src/routes/user.route.js';
 import providerRoutes from './src/routes/provider.route.js';
 import companyRoutes from './src/routes/company.route.js';
@@ -73,6 +75,211 @@ async function testDatabaseConnection() {
 } 
 
 const app: Application = express();
+const server = createServer(app);
+
+// Socket.IO setup with messaging namespace
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: true, // reflect request origin (allows all origins)
+    credentials: true,
+  },
+});
+
+// Get the messaging namespace
+const messagingIo = io.of('/messaging');
+
+// Socket.IO connection handling for messaging namespace
+const connectedUsers = new Map<string, string>(); // userId -> socketId
+const activeConversations = new Map<string, string>(); // userId -> conversationId
+
+messagingIo.on('connection', (socket) => {
+  console.log(`Client connected: ${socket.id}`);
+
+  // Handle user join
+  socket.on('user:join', (data: { userId: string }) => {
+    const { userId } = data;
+    connectedUsers.set(userId, socket.id);
+    console.log(`User ${userId} joined with socket ${socket.id}`);
+    
+    // Broadcast to all connected clients that a user came online
+    messagingIo.emit('user:online', { userId, status: 'online' });
+    
+    socket.emit('user:joined', { success: true, userId });
+  });
+
+  // Handle conversation enter
+  socket.on('conversation:enter', (data: { userId: string; conversationId: string }) => {
+    const { userId, conversationId } = data;
+    activeConversations.set(userId, conversationId);
+    console.log(`User ${userId} entered conversation ${conversationId}`);
+    
+    socket.emit('conversation:entered', { success: true, conversationId });
+  });
+
+  // Handle conversation leave
+  socket.on('conversation:leave', (data: { userId: string }) => {
+    const { userId } = data;
+    const conversationId = activeConversations.get(userId);
+    activeConversations.delete(userId);
+    console.log(`User ${userId} left conversation ${conversationId}`);
+    
+    socket.emit('conversation:left', { success: true });
+  });
+
+  // Handle message send
+  socket.on('message:send', async (data: any) => {
+    try {
+      // Create message in database
+      const message = await prisma.message.create({
+        data: {
+          content: data.content,
+          fromId: data.fromId,
+          toId: data.toId,
+          conversationId: data.conversationId,
+        },
+      });
+
+      console.log('Message saved to DB:', message);
+      
+      // Emit to sender (confirmation)
+      socket.emit('message:sent', message);
+      
+      // Emit to recipient if they're online
+      const recipientSocketId = connectedUsers.get(data.toId);
+      if (recipientSocketId) {
+        console.log(`Recipient ${data.toId} is online, socket: ${recipientSocketId}`);
+        messagingIo.to(recipientSocketId).emit('message:received', message);
+        console.log(`Message delivered to recipient ${data.toId}`);
+        
+        // Auto-mark as read if recipient is actively viewing this conversation
+        const recipientActiveConversation = activeConversations.get(data.toId);
+        if (recipientActiveConversation === message.conversationId) {
+          try {
+            await prisma.message.update({
+              where: { id: message.id },
+              data: { receivedAt: new Date() },
+            });
+            console.log(`Auto-marked message ${message.id} as read for actively viewing user ${data.toId}`);
+            
+            // Emit read receipt to sender
+            socket.emit('message:read-receipt', {
+              messageId: message.id,
+              readBy: data.toId,
+              readAt: new Date().toISOString()
+            });
+            
+            // Also emit to recipient that message was auto-marked as read
+            messagingIo.to(recipientSocketId).emit('message:auto-read', {
+              messageId: message.id,
+              conversationId: message.conversationId
+            });
+          } catch (error) {
+            console.error('Error auto-marking as read:', error);
+          }
+        }
+      } else {
+        console.log(`Recipient ${data.toId} is offline`);
+      }
+      
+      socket.emit('message:success', { success: true, message });
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      socket.emit('message:error', { error: error.message });
+    }
+  });
+
+  // Handle mark message as read
+  socket.on('message:mark-read', async (data: { messageId: string; userId: string }) => {
+    try {
+      const { messageId, userId } = data;
+      
+      const updatedMessage = await prisma.message.update({
+        where: { id: messageId },
+        data: { receivedAt: new Date() },
+      });
+      
+      // Emit read receipt to sender if they're online
+      const senderSocketId = connectedUsers.get(updatedMessage.fromId);
+      if (senderSocketId) {
+        messagingIo.to(senderSocketId).emit('message:read-receipt', {
+          messageId,
+          readBy: userId,
+          readAt: updatedMessage.receivedAt
+        });
+      }
+      
+      socket.emit('message:marked-read', { messageId, success: true });
+    } catch (error: any) {
+      console.error(`Error marking message as read: ${error.message}`);
+      socket.emit('message:error', { error: error.message });
+    }
+  });
+
+  // Handle mark conversation as read
+  socket.on('conversation:mark-read', async (data: { conversationId: string; userId: string }) => {
+    try {
+      const { conversationId, userId } = data;
+      
+      await prisma.message.updateMany({
+        where: {
+          conversationId,
+          toId: userId,
+          receivedAt: null,
+        },
+        data: { receivedAt: new Date() },
+      });
+      
+      socket.emit('conversation:marked-read', { 
+        conversationId, 
+        success: true 
+      });
+    } catch (error: any) {
+      console.error(`Error marking conversation as read: ${error.message}`);
+      socket.emit('message:error', { error: error.message });
+    }
+  });
+
+  // Handle get online users
+  socket.on('users:online', () => {
+    const onlineUserIds = Array.from(connectedUsers.keys());
+    socket.emit('users:online-list', onlineUserIds);
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log(`Client disconnected: ${socket.id}`);
+    
+    // Remove user from connected users map and active conversations
+    for (const [userId, socketId] of connectedUsers.entries()) {
+      if (socketId === socket.id) {
+        connectedUsers.delete(userId);
+        activeConversations.delete(userId);
+        console.log(`User ${userId} disconnected`);
+        
+        // Broadcast to all connected clients that a user went offline
+        messagingIo.emit('user:offline', { userId, status: 'offline' });
+        break;
+      }
+    }
+  });
+});
+
+// Broadcast confirmation update function
+function broadcastConfirmationUpdate(conversationId: string, confirmation: any) {
+  // Find all users in this conversation
+  for (const [userId, activeConvId] of activeConversations.entries()) {
+    if (activeConvId === conversationId) {
+      const socketId = connectedUsers.get(userId);
+      if (socketId) {
+        messagingIo.to(socketId).emit('confirmation_updated', { conversationId, confirmation });
+      }
+    }
+  }
+  console.log(`Broadcasted confirmation update for conversation ${conversationId}`);
+}
+
+// Make broadcastConfirmationUpdate available globally for routes
+(global as any).broadcastConfirmationUpdate = broadcastConfirmationUpdate;
 
 // CORS configuration (must run before any rate limiting or routes)
 const corsOptions: CorsOptions = {
@@ -147,8 +354,9 @@ async function startServer() {
     // Don't exit - continue without scheduled jobs
   }
   
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`=====> Server running on port ${PORT}`);
+    console.log(`=====> Socket.IO messaging server available at /messaging`);
   });
 }
 

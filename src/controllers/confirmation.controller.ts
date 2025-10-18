@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import { prisma } from '../utils/database.js';
 import { queueService } from '../services/queue.service.js';
     const metaEnv: any = (import.meta as any)?.env ?? (process.env as any);
-    const MESSAGE_URL = metaEnv.PROD
-      ? (metaEnv.VITE_API_BASE_URL_MESSAGES_PROD?.replace('messaging', 'api'))
-      : (metaEnv.VITE_API_BASE_URL_MESSAGES?.replace('messaging', 'api'));
+    const API_BASE_URL = metaEnv.PROD
+      ? metaEnv.VITE_API_BASE_URL_PROD
+      : metaEnv.VITE_API_BASE_URL;
 // Confirmation data now maps to Schedule table fields
 // conversationId will be used to find related schedules via conversation user IDs
 
@@ -281,7 +281,7 @@ export const createConfirmationController = async (req: Request, res: Response) 
 
     // Notify communication service for real-time update
     try {
-      await fetch(`${MESSAGE_URL}/confirmation/broadcast`, {
+      await fetch(`${API_BASE_URL}/confirmations/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversationId, confirmation })
@@ -357,7 +357,7 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
 
     // Notify communication service for real-time update
     try {
-      await fetch(`${MESSAGE_URL}/confirmation/broadcast`, {
+      await fetch(`${API_BASE_URL}/confirmations/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversationId, confirmation })
