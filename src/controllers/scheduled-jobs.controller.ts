@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { scheduledJobsService } from '../services/scheduled-jobs.service';
-import { bookingReminderService } from '../services/booking-reminder.service';
+import { scheduledJobsService } from '../services/scheduled-jobs.service.js';
+import { bookingReminderService } from '../services/booking-reminder.service.js';
 
 export class ScheduledJobsController {
 
